@@ -1,8 +1,10 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
-const connectDB = require('./config/db'); // 1. On importe le fichier de connexion
+const connectDB = require('./config/db'); 
 const authRoutes = require('./routes/authRoutes');
+const prestataireRoutes = require('./routes/prestataireRoutes');
+const bookingRoutes = require('./routes/bookingRoutes');
 
 
 // Chargement des variables d'environnement
@@ -22,7 +24,8 @@ app.use(express.json());
 // Route de test
 
 app.use('/api/auth', authRoutes);
-
+app.use('/api/prestataires', prestataireRoutes);
+app.use('/api/bookings', bookingRoutes);
 app.get('/', (req, res) => {
     res.send('L\'API NappyBooking est en ligne !');
 });
