@@ -4,34 +4,46 @@ const Booking = require('../models/Booking');
 // @route   POST /api/bookings
 exports.createBooking = async (req, res) => {
     try {
-        const { prestataire, date_rendezvous, commentaire } = req.body;
-        
-        // Pour l'instant on passe le client manuellement, 
-        // plus tard on le récupérera via le Token (req.user.id)
-        const { client } = req.body; 
+        const { salonId, service, date, heure, prix, client_id } = req.body;
 
+        // 1. Validation des champs
+        if (!salonId || !service || !date || !heure) {
+            return res.status(400).json({ message: "Données manquantes pour la réservation" });
+        }
+
+        // 2. Création de la réservation
         const booking = await Booking.create({
-            client,
-            prestataire,
-            date_rendezvous,
-            commentaire
+            salon: salonId,
+            client: client_id,
+            service,
+            date,
+            heure,
+            prix,
+            statut: 'en attente'
         });
 
-        res.status(201).json(booking);
+        // 3. Réponse
+        res.status(201).json({
+            message: "Réservation créée avec succès !",
+            booking
+        });
+
     } catch (error) {
-        res.status(500).json({ message: "Erreur lors de la réservation", error: error.message });
+        res.status(500).json({ 
+            message: "Erreur serveur lors de la réservation", 
+            error: error.message 
+        });
     }
 };
 
-// @desc    Voir les réservations d'un client
-// @route   GET /api/bookings/mybookings/:clientId
+// @desc    Récupérer les réservations d'un client
+// @route   GET /api/bookings/my-bookings
 exports.getUserBookings = async (req, res) => {
     try {
-        // .populate permet de récupérer les détails (nom, salon) au lieu de juste l'ID
-        const bookings = await Booking.find({ client: req.params.clientId })
-                                      .populate('prestataire', 'nom_salon adresse');
-        res.status(200).json(bookings);
+        // Supposons que l'ID client vient du middleware d'auth (req.user.id)
+        const bookings = await Booking.find({ client: req.params.clientId }).populate('salon');
+        res.json(bookings);
     } catch (error) {
-        res.status(500).json({ message: "Erreur de récupération", error: error.message });
+        res.status(500).json({ message: "Erreur lors de la récupération", error: error.message });
     }
 };

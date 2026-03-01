@@ -1,10 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 
-// Importation des images des villes et salons
-import imgMistral from "../assets/mistral.jpg";
-import imgAude from "../assets/aude.jpg";
-import imgDedGlow from "../assets/dedGlow.jpg";
+// Importation des images des villes (communes)
 import imgParis from "../assets/paris.jpg";
 import imgLyon from "../assets/lyon.jpg";
 import imgMarseille from "../assets/marseille.jpeg";
@@ -12,13 +9,13 @@ import imgBordeaux from "../assets/bordeaux.jpg";
 import imgNantes from "../assets/nantes.jpg";
 import imgLille from "../assets/lille.jpg";
 
-// Importation des images des prestations
-import imgBraids from "../assets/braids.jpg";
-import imgLace from "../assets/lace.jpg";
-import imgPasseMeche from "../assets/passe-meche.jpg";
-import imgLoxe from "../assets/loxe.jpg";
+// Importation des images Prestations renommées
+import manucure1 from "../assets/manucure1.jpg";
+import manucure2 from "../assets/manucure2.jpg";
+import manucure3 from "../assets/manucure3.jpg";
+import manucure4 from "../assets/manucure4.jpg";
 
-const Coiffeuses = () => {
+const Manucure = () => {
   const { city } = useParams();
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
@@ -50,18 +47,19 @@ const Coiffeuses = () => {
   }, []);
 
   const colors = {
-    terracotta: "#B37256",
+    roseSoft: "#D4A373", 
     black: "#1A1A1A",
     white: "#FFFFFF",
     gray: "#666",
     bg: "#FAF9F6",
     lightGray: "#F5F5F5",
+    terracotta: "#B37256",
   };
 
   // --- LOGIQUE DE RÉSERVATION CORRIGÉE ---
-  const handleBookingClick = (salonId, salonName, salonAddress) => {
+    const handleBookingClick = (salonId, salonName, salonAddress) => {
     const auth = localStorage.getItem('isAuthenticated');
-    const params = `category=coiffure&name=${encodeURIComponent(salonName)}&address=${encodeURIComponent(salonAddress)}`;
+    const params = `category=manucure&name=${encodeURIComponent(salonName)}&address=${encodeURIComponent(salonAddress)}`;
 
     if (auth === 'true') {
       navigate(`/booking/${salonId}?${params}`);
@@ -81,26 +79,15 @@ const Coiffeuses = () => {
   ];
 
   const prestationsPopulaires = [
-    { id: 1, name: "Pose Lace Wig", img: imgLace, count: "120+ salons" },
-    { id: 2, name: "Braids Butterfly", img: imgBraids, count: "85+ salons" },
-    { id: 3, name: "Locks & Dreadlocks", img: imgLoxe, count: "50+ salons" },
-    { id: 4, name: "Passes Mèches Américaines", img: imgPasseMeche, count: "95+ salons" },
+    { id: 1, name: "Vernis Semi-Permanent", img: manucure1, count: "150+ salons" },
+    { id: 2, name: "Pose de Gel / Capsules", img: manucure2, count: "90+ salons" },
+    { id: 3, name: "Nail Art & Design", img: manucure3, count: "65+ salons" },
+    { id: 4, name: "Soin Complet des Mains", img: manucure4, count: "110+ salons" },
   ];
 
   const salonsData = [
-    { id: 1, name: "MistralCare", rating: 4.9, address: "15 rue Gauthey, 75017 Paris", city: "paris", price: "45€", tags: ["Tissage", "Soins"], img: imgMistral, images: [imgMistral, imgBraids, imgLace] },
-    { id: 2, name: "Ded Glow Beauty", rating: 4.8, address: "54 rue Veron, 94140 Alfortville", city: "paris", price: "35€", tags: ["Nattes", "Beauté"], img: imgDedGlow, images: [imgDedGlow, imgPasseMeche, imgBraids] },
-    { id: 3, name: "audeBraids", rating: 5.0, address: "Corbeil Essonnes, Paris Sud", city: "paris", price: "60€", tags: ["Braids", "Crochet"], img: imgAude, images: [imgAude, imgLace, imgLoxe] },
-    { id: 4, name: "Lyon Nappy Zen", rating: 4.7, address: "22 Rue de la République, Lyon", city: "lyon", price: "50€", tags: ["Locks", "Démêlage"], img: imgLyon, images: [imgLyon, imgLoxe, imgBraids] },
-    { id: 5, name: "Lumière Afro", rating: 4.9, address: "5 Petite Rue des Feuillants, Lyon", city: "lyon", price: "40€", tags: ["Enfants", "Soins"], img: imgLyon, images: [imgLyon, imgPasseMeche, imgLace] },
-    { id: 6, name: "Massilia Afro Style", rating: 4.6, address: "10 Rue d'Aubagne, Marseille", city: "marseille", price: "30€", tags: ["Nattes", "Vanilles"], img: imgMarseille, images: [imgMarseille, imgBraids, imgPasseMeche] },
-    { id: 7, name: "Phocéenne Boucles", rating: 4.8, address: "45 Avenue du Prado, Marseille", city: "marseille", price: "55€", tags: ["Wash & Go", "Coupe"], img: imgMarseille, images: [imgMarseille, imgLace, imgBraids] },
-    { id: 8, name: "Bordeaux Afro Glow", rating: 4.9, address: "12 Cours de l'Intendance, Bordeaux", city: "bordeaux", price: "45€", tags: ["Box Braids", "Curly Cut"], img: imgBordeaux, images: [imgBordeaux, imgBraids, imgLoxe] },
-    { id: 9, name: "L'Atelier Nappy", rating: 4.7, address: "88 Rue Sainte-Catherine, Bordeaux", city: "bordeaux", price: "38€", tags: ["Twists", "Soins"], img: imgBordeaux, images: [imgBordeaux, imgPasseMeche, imgLace] },
-    { id: 10, name: "Nantes Nappy Queen", rating: 4.8, address: "14 Rue de Verdun, Nantes", city: "nantes", price: "42€", tags: ["Coaching", "Tresses"], img: imgNantes, images: [imgNantes, imgBraids, imgLace] },
-    { id: 11, name: "Naoned Braids", rating: 4.5, address: "3 Rue de la Fosse, Nantes", city: "nantes", price: "50€", tags: ["Faux Locs", "Crochet"], img: imgNantes, images: [imgNantes, imgLoxe, imgPasseMeche] },
-    { id: 12, name: "Lille Elégance Afro", rating: 4.9, address: "21 Rue Faidherbe, Lille", city: "lille", price: "48€", tags: ["Soins Protéinés", "Mariage"], img: imgLille, images: [imgLille, imgBraids, imgLace] },
-    { id: 13, name: "Ch'ti Nappy Corner", rating: 4.7, address: "5 Rue de la Monnaie, Lille", city: "lille", price: "35€", tags: ["Enfants", "Tresses"], img: imgLille, images: [imgLille, imgPasseMeche, imgBraids] },
+    { id: 1, name: "Nail Gallery Paris", rating: 4.9, address: "22 rue de Rivoli, 75001 Paris", city: "paris", price: "35€", tags: ["Semi-permanent", "Nail Art"], img: manucure1, images: [manucure1, manucure2, manucure3] },
+    { id: 2, name: "Gloss & Go", rating: 4.7, address: "10 rue Victor Hugo, 69002 Lyon", city: "lyon", price: "40€", tags: ["Gel", "Manucure"], img: manucure2, images: [manucure2, manucure4, manucure1] },
   ];
 
   const filteredSalons = city
@@ -108,7 +95,7 @@ const Coiffeuses = () => {
     : [];
 
   const handleSearch = () => {
-    if (searchCity.trim()) navigate(`/coiffeuses/${searchCity.toLowerCase().trim()}`);
+    if (searchCity.trim()) navigate(`/manucure/${searchCity.toLowerCase().trim()}`);
   };
 
   // --- VUE 1 : RÉSULTATS PAR VILLE ---
@@ -116,18 +103,18 @@ const Coiffeuses = () => {
     return (
       <div style={{ display: "flex", height: "100vh", width: "100%", overflow: "hidden", paddingTop: "80px" }}>
         <div style={{ flex: isMobile ? "1" : "0 0 60%", overflowY: "auto", padding: "20px 40px", backgroundColor: colors.white }}>
-          <Link to="/coiffeuses" style={{ color: colors.terracotta, textDecoration: "none", fontWeight: "700", fontSize: "0.9rem" }}>
+          <Link to="/manucure" style={{ color: colors.roseSoft, textDecoration: "none", fontWeight: "700", fontSize: "0.9rem" }}>
             ← RETOUR AUX VILLES
           </Link>
           <h1 style={{ fontSize: "1.8rem", fontWeight: "900", margin: "20px 0 10px" }}>
-            Coiffeuses Afro à {city.charAt(0).toUpperCase() + city.slice(1)}
+            Prothésistes Ongulaires à {city.charAt(0).toUpperCase() + city.slice(1)}
           </h1>
-          <p style={{ color: colors.gray, marginBottom: "30px" }}>{filteredSalons.length} établissements trouvés</p>
+          <p style={{ color: colors.gray, marginBottom: "30px" }}>{filteredSalons.length} experts trouvés</p>
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
             {filteredSalons.map((salon) => (
               <div key={salon.id} style={{ display: "flex", border: "1px solid #EEE", borderRadius: "16px", overflow: "hidden" }}>
                 <div 
-                  onClick={() => navigate(`/salon/${salon.id}?category=coiffure&name=${encodeURIComponent(salon.name)}&address=${encodeURIComponent(salon.address)}&rating=${salon.rating}&price=${encodeURIComponent(salon.price)}&tags=${encodeURIComponent(JSON.stringify(salon.tags))}&img=${encodeURIComponent(salon.img)}&images=${encodeURIComponent(JSON.stringify(salon.images || [salon.img]))}`)}
+                  onClick={() => navigate(`/salon/${salon.id}?category=manucure&name=${encodeURIComponent(salon.name)}&address=${encodeURIComponent(salon.address)}&rating=${salon.rating}&price=${encodeURIComponent(salon.price)}&tags=${encodeURIComponent(JSON.stringify(salon.tags))}&img=${encodeURIComponent(salon.img)}&images=${encodeURIComponent(JSON.stringify(salon.images || [salon.img]))}`)}
                   style={{ cursor: 'pointer', flexShrink: 0 }}
                 >
                   <img src={salon.img} alt={salon.name} style={{ width: "180px", height: "180px", objectFit: "cover", display: "block" }} />
@@ -136,14 +123,14 @@ const Coiffeuses = () => {
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
                       <h3 
-                        onClick={() => navigate(`/salon/${salon.id}?category=coiffure&name=${encodeURIComponent(salon.name)}&address=${encodeURIComponent(salon.address)}&rating=${salon.rating}&price=${encodeURIComponent(salon.price)}&tags=${encodeURIComponent(JSON.stringify(salon.tags))}&img=${encodeURIComponent(salon.img)}&images=${encodeURIComponent(JSON.stringify(salon.images || [salon.img]))}`)}
+                        onClick={() => navigate(`/salon/${salon.id}?category=manucure&name=${encodeURIComponent(salon.name)}&address=${encodeURIComponent(salon.address)}&rating=${salon.rating}&price=${encodeURIComponent(salon.price)}&tags=${encodeURIComponent(JSON.stringify(salon.tags))}&img=${encodeURIComponent(salon.img)}&images=${encodeURIComponent(JSON.stringify(salon.images || [salon.img]))}`)}
                         style={{ margin: 0, fontSize: "1.3rem", fontWeight: "800", cursor: "pointer", textDecoration: "none" }}
                         onMouseEnter={(e) => e.target.style.color = colors.terracotta}
                         onMouseLeave={(e) => e.target.style.color = colors.black}
                       >
                         {salon.name}
                       </h3>
-                      <div style={{ fontWeight: "700", color: colors.terracotta }}>★ {salon.rating}</div>
+                      <div style={{ fontWeight: "700", color: colors.roseSoft }}>★ {salon.rating}</div>
                     </div>
                     <p style={{ color: colors.gray, fontSize: "0.9rem", margin: "5px 0" }}>{salon.address}</p>
                     <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
@@ -154,12 +141,11 @@ const Coiffeuses = () => {
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                     <span style={{ fontWeight: "800", fontSize: "1.1rem" }}>Dès {salon.price}</span>
-                    {/* APPEL DE LA FONCTION AVEC ID DU SALON */}
                     <button 
-                        onClick={() => handleBookingClick(salon.id, salon.name, salon.address)} 
-                        style={{ backgroundColor: colors.terracotta, color: "white", border: "none", padding: "10px 20px", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}
+                      onClick={() => handleBookingClick(salon.id, salon.name, salon.address)} 
+                      style={{ backgroundColor: colors.roseSoft, color: "white", border: "none", padding: "10px 20px", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}
                     >
-                        Prendre RDV
+                      Prendre RDV
                     </button>
                   </div>
                 </div>
@@ -168,58 +154,59 @@ const Coiffeuses = () => {
           </div>
         </div>
         {!isMobile && (
-          <div style={{ flex: "0 0 40%", backgroundColor: "#E5E3DF", borderLeft: "1px solid #EEE" }}>
-            <iframe title="Map" width="100%" height="100%" frameBorder="0" src={`https://maps.google.com/maps?q=${city}+hair+salon&output=embed`} style={{ filter: "grayscale(0.2)" }}></iframe>
+          <div style={{ flex: "0 0 40%", backgroundColor: "#E5E3DF" }}>
+             <iframe title="Map" width="100%" height="100%" frameBorder="0" src={`https://maps.google.com/maps?q=${city}+manicure+nail+salon&output=embed`} style={{ filter: "grayscale(0.5)" }}></iframe>
           </div>
         )}
       </div>
     );
   }
 
+  // --- VUE 2 : GRILLE PRINCIPALE ---
   return (
     <div style={{ backgroundColor: colors.bg, minHeight: "100vh", paddingTop: "120px" }}>
       <div style={{ padding: "0 20px", maxWidth: "1200px", margin: "0 auto" }}>
         
-        {/* HEADER & RECHERCHE */}
+        {/* HEADER */}
         <div style={{ marginBottom: "60px", textAlign: "center" }}>
           <h1 style={{ fontSize: isMobile ? "2rem" : "3.5rem", fontWeight: "900", color: colors.black, marginBottom: "40px" }}>
-            Réservez en ligne <br /> un RDV avec une coiffeuse
+            Sublimez vos mains <br /> par nos Nail Artists
           </h1>
           <div style={{ backgroundColor: colors.white, borderRadius: "12px", padding: isMobile ? "8px" : "10px 15px", display: "flex", boxShadow: "0 20px 40px rgba(0,0,0,0.1)", alignItems: "center", width: "100%", maxWidth: "900px", margin: "0 auto" }}>
-            <div style={{ flex: 1.5, display: "flex", flexDirection: "column", padding: isMobile ? "5px 10px" : "5px 20px" }}>
-              {!isMobile && <label style={{ color: "#717171", fontSize: "0.85rem", marginBottom: "4px", textAlign: "left", fontWeight: "700" }}>QUE CHERCHEZ-VOUS ?</label>}
-              <input type="text" placeholder="Nom du salon, prestation..." style={{ width: "100%", border: "none", outline: "none", fontSize: "1rem" }} />
+            <div style={{ flex: 1.5, display: "flex", flexDirection: "column", padding: "5px 20px" }}>
+              {!isMobile && <label style={{ color: "#717171", fontSize: "0.85rem", marginBottom: "4px", textAlign: "left", fontWeight: "700" }}>PRESTATION</label>}
+              <input type="text" placeholder="Vernis, Gel, Manucure..." style={{ width: "100%", border: "none", outline: "none", fontSize: "1rem" }} />
             </div>
             <div style={{ width: "1px", height: "35px", backgroundColor: "#E0E0E0" }}></div>
-            <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: isMobile ? "5px 10px" : "5px 20px" }}>
+            <div style={{ flex: 1, display: "flex", flexDirection: "column", padding: "5px 20px" }}>
               {!isMobile && <label style={{ color: "#717171", fontSize: "0.85rem", marginBottom: "4px", textAlign: "left", fontWeight: "700" }}>OÙ</label>}
               <input type="text" value={searchCity} onChange={(e) => setSearchCity(e.target.value)} onKeyDown={(e) => e.key === "Enter" && handleSearch()} placeholder="Ville..." style={{ width: "100%", border: "none", outline: "none", fontSize: "1rem" }} />
             </div>
-            <button onClick={handleSearch} style={{ backgroundColor: colors.terracotta, color: colors.white, padding: isMobile ? "12px" : "18px 45px", borderRadius: "10px", fontWeight: "700", border: "none", cursor: "pointer" }}>RECHERCHER</button>
+            <button onClick={handleSearch} style={{ backgroundColor: colors.black, color: colors.white, padding: isMobile ? "12px" : "18px 45px", borderRadius: "10px", fontWeight: "700", border: "none", cursor: "pointer" }}>RECHERCHER</button>
           </div>
         </div>
 
-        {/* SECTION 1 : VILLES */}
+        {/* GRILLE VILLES */}
         <h2 style={{ fontSize: "1.8rem", fontWeight: "800", marginBottom: "30px" }}>Parcourir par ville</h2>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(320px, 1fr))", gap: "30px", marginBottom: "80px" }}>
           {cities.map((item) => (
-            <Link key={item.slug} to={`/coiffeuses/${item.slug}`} style={{ position: "relative", height: "300px", borderRadius: "24px", overflow: "hidden", textDecoration: "none" }}>
+            <Link key={item.slug} to={`/manucure/${item.slug}`} style={{ position: "relative", height: "300px", borderRadius: "24px", overflow: "hidden", textDecoration: "none" }}>
               <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to top, rgba(0,0,0,0.8), transparent)", zIndex: 1 }} />
               <img src={item.img} alt={item.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
               <div style={{ position: "absolute", bottom: "25px", left: "25px", zIndex: 2, color: "white" }}>
                 <h3 style={{ fontSize: "2rem", fontWeight: "800", margin: 0 }}>{item.name}</h3>
-                <p style={{ margin: "5px 0 0", opacity: 0.9 }}>Voir les coiffeuses →</p>
+                <p style={{ margin: "5px 0 0", opacity: 0.9 }}>Voir les experts →</p>
               </div>
             </Link>
           ))}
         </div>
 
-        {/* SECTION 2 : PRESTATIONS POPULAIRES */}
+        {/* SECTION POPULAIRE */}
         <div style={{ paddingBottom: "80px" }}>
-          <h2 style={{ fontSize: "1.8rem", fontWeight: "800", marginBottom: "30px" }}>Nos prestations populaires</h2>
+          <h2 style={{ fontSize: "1.8rem", fontWeight: "800", marginBottom: "30px" }}>Prestations ongulaires phares</h2>
           <div style={{ display: "grid", gridTemplateColumns: isMobile ? "repeat(2, 1fr)" : "repeat(4, 1fr)", gap: "20px" }}>
             {prestationsPopulaires.map((p) => (
-              <div key={p.id} style={{ borderRadius: "16px", overflow: "hidden", backgroundColor: colors.white, boxShadow: "0 4px 12px rgba(0,0,0,0.05)", cursor: "pointer", transition: "0.3s" }}>
+              <div key={p.id} style={{ borderRadius: "16px", overflow: "hidden", backgroundColor: colors.white, boxShadow: "0 4px 12px rgba(0,0,0,0.05)" }}>
                 <div style={{ height: "180px" }}>
                   <img src={p.img} alt={p.name} style={{ width: "100%", height: "100%", objectFit: "cover" }} />
                 </div>
@@ -232,7 +219,7 @@ const Coiffeuses = () => {
           </div>
         </div>
 
-        {/* SECTION 3 : HYPE TEXTE */}
+        {/* SECTION HYPE */}
         <div 
           ref={hypeSectionRef}
           style={{ 
@@ -245,20 +232,18 @@ const Coiffeuses = () => {
             transition: 'all 1s ease-out'
           }}
         >
-          <span style={{ color: colors.terracotta, fontWeight: '700', letterSpacing: '3px', textTransform: 'uppercase', fontSize: '0.9rem', display: 'block', marginBottom: '20px' }}>
-            L'Élite de la Coiffure Afro
+          <span style={{ color: colors.roseSoft, fontWeight: '700', letterSpacing: '3px', textTransform: 'uppercase', fontSize: '0.9rem', display: 'block', marginBottom: '20px' }}>
+            L'Éclat jusqu'au bout des doigts
           </span>
           <h2 style={{ fontSize: isMobile ? '2.2rem' : '3.8rem', fontWeight: '900', margin: '0 0 30px 0', color: colors.black, lineHeight: '1.1' }}>
-            La coiffure de vos rêves,<br />réalisée par des expertes.
+            Un Nail Art unique,<br />conçu pour vous.
           </h2>
           <p style={{ fontSize: isMobile ? '1.1rem' : '1.3rem', color: colors.gray, lineHeight: '1.8', marginBottom: '50px', fontWeight: '400' }}>
-            Derrière chaque tresse, chaque boucle et chaque lissage invisible chez NappyBooking se cache une véritable artiste du cheveu. Nos coiffeuses ne se contentent pas de coiffer : elles sculptent, soignent et subliment votre identité avec une précision millimétrée. Nous avons parcouru la France pour dénicher ces mains d'or capables de maîtriser toutes les textures, des nattes les plus complexes aux soins profonds les plus délicats. Choisir une experte sur notre plateforme, c’est s’offrir l’assurance d’un résultat haute couture allié au respect total de votre fibre capillaire. Plus qu’un rendez-vous, c’est une célébration de votre beauté naturelle par celles qui la comprennent le mieux. Ne confiez plus vos cheveux au hasard, offrez-leur l'excellence qu'ils méritent.
+            Parce que vos mains sont votre première signature, NappyBooking a sélectionné les prothésistes ongulaires les plus talentueuses de France. Du vernis semi-permanent impeccable au Nail Art le plus audacieux, nos expertes transforment chaque ongle en une véritable œuvre d'art.
           </p>
           <button 
-            onClick={() => handleBookingClick('all')} // Redirige vers une liste globale ou salon par défaut
-            style={{ backgroundColor: colors.black, color: colors.white, padding: '20px 50px', borderRadius: '50px', fontWeight: '800', border: 'none', cursor: 'pointer', fontSize: '1.1rem', boxShadow: '0 10px 30px rgba(0,0,0,0.1)', transition: '0.3s' }}
-            onMouseEnter={(e) => e.target.style.transform = "scale(1.05)"}
-            onMouseLeave={(e) => e.target.style.transform = "scale(1)"}
+            onClick={() => handleBookingClick('all')} 
+            style={{ backgroundColor: colors.black, color: colors.white, padding: '20px 50px', borderRadius: '50px', fontWeight: '800', border: 'none', cursor: 'pointer', fontSize: '1.1rem' }}
           >
             TROUVER VOTRE EXPERT
           </button>
@@ -347,4 +332,4 @@ const Coiffeuses = () => {
   );
 };
 
-export default Coiffeuses;
+export default Manucure;
