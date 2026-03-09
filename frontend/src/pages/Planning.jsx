@@ -41,7 +41,7 @@ const Planning = () => {
     const fetchAppointments = async () => {
       try {
         const token = localStorage.getItem('token');
-        const res = await fetch('http://localhost:5000/api/bookings/pro', {
+        const res = await fetch('https://nappybooking.onrender.com/api/bookings/pro', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
         if (!res.ok) throw new Error();

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+  import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
 const DashboardClient = () => {
@@ -285,7 +285,7 @@ const DashboardClient = () => {
                     onClick={async () => {
                       setSupportLoading(true);
                       try {
-                        await fetch('http://localhost:5000/api/support', {
+                        await fetch('https://nappybooking.onrender.com/api/support', {
                           method: 'POST',
                           headers: {
                             'Content-Type': 'application/json',

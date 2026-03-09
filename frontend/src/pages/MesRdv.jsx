@@ -100,7 +100,7 @@ const MesRdv = () => {
       setIsLoading(true);
       try {
         const token = localStorage.getItem('token');
-        const response = await fetch('http://localhost:5000/api/bookings/me', {
+        const response = await fetch('https://nappybooking.onrender.com/api/bookings/me', {
           headers: { 'Authorization': `Bearer ${token}` },
         });
 
@@ -147,7 +147,7 @@ const MesRdv = () => {
 
     try {
       const token = localStorage.getItem('token');
-      const response = await fetch(`http://localhost:5000/api/bookings/${selectedBooking._id}/cancel`, {
+      const response = await fetch(`https://nappybooking.onrender.com/api/bookings/${selectedBooking._id}/cancel`, {
         method: 'PUT',
         headers: { 'Authorization': `Bearer ${token}` },
       });
