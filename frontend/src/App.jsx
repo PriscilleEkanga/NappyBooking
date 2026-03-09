@@ -1,82 +1,63 @@
+import { lazy, Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
 import Navbar from './components/Navbar';
+
+// Pages chargées immédiatement (page d'accueil uniquement)
 import Home from './pages/Home';
-import DevenirPartenaire from './pages/DevenirPartenaire';
-import Login from './pages/Login';
-import Coiffeuses from './pages/Coiffeuses';
-import Manucure from './pages/Manucure';
-import Maquillage from './pages/Maquillage';
-import Cils from './pages/Cils';
-import ProfilSalon from './pages/ProfilSalon'; 
-import Register from './pages/Register';
-import DashboardClient from './pages/DashboardClient';
-import DashboardPro from './pages/DashboardPro'; 
-import ManageServices from './pages/ManageServices';
-import BookingForm from './pages/BookingForm';
-import MesRdv from './pages/MesRdv';
-import Planning from './pages/Planning';
-import ManageEmployees from './pages/ManageEmployees';
 
+// Toutes les autres pages en lazy loading
+const DevenirPartenaire = lazy(() => import('./pages/DevenirPartenaire'));
+const Login             = lazy(() => import('./pages/Login'));
+const Register          = lazy(() => import('./pages/Register'));
+const Coiffeuses        = lazy(() => import('./pages/Coiffeuses'));
+const Manucure          = lazy(() => import('./pages/Manucure'));
+const Maquillage        = lazy(() => import('./pages/Maquillage'));
+const Cils              = lazy(() => import('./pages/Cils'));
+const ProfilSalon       = lazy(() => import('./pages/ProfilSalon'));
+const DashboardClient   = lazy(() => import('./pages/DashboardClient'));
+const DashboardPro      = lazy(() => import('./pages/DashboardPro'));
+const ManageServices    = lazy(() => import('./pages/ManageServices'));
+const ManageEmployees   = lazy(() => import('./pages/ManageEmployees'));
+const BookingForm       = lazy(() => import('./pages/BookingForm'));
+const MesRdv            = lazy(() => import('./pages/MesRdv'));
+const Planning          = lazy(() => import('./pages/Planning'));
 
+// Spinner affiché pendant le chargement d'une page
+const PageLoader = () => (
+  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', minHeight: '60vh', flexDirection: 'column', gap: '16px' }}>
+    <div style={{ width: '40px', height: '40px', border: '3px solid #F0E8E3', borderTop: '3px solid #B37256', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+    <style>{`@keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }`}</style>
+  </div>
+);
 
 function App() {
   return (
     <>
       <Navbar />
-      <Routes>
-        {/* Route Accueil */}
-        <Route path="/" element={<Home />} />
-        
-        {/* Route Devenir Partenaire */}
-        <Route path="/devenir-partenaire" element={<DevenirPartenaire />} />
-        
-        {/* Route Connexion */}
-        <Route path="/login" element={<Login />} />
-        
-        {/* Routes Coiffure */}
-        <Route path="/coiffeuses" element={<Coiffeuses />} />
-        <Route path="/coiffeuses/:city" element={<Coiffeuses />} />
-
-        {/* Routes Manucure */}
-        <Route path="/manucure" element={<Manucure />} />
-        <Route path="/manucure/:city" element={<Manucure />} />
-
-        {/* Routes Maquillage */}
-        <Route path="/maquillage" element={<Maquillage />} />
-        <Route path="/maquillage/:city" element={<Maquillage />} />
-
-        {/* Routes Extensions de Cils */}
-        <Route path="/cils" element={<Cils />} />
-        <Route path="/cils/:city" element={<Cils />} />
-
-        {/* Route Profil Salon (Fiche détaillée) */}
-        <Route path="/salon/:id" element={<ProfilSalon />} />
-        
-        {/* Route s'authentifier */}
-        <Route path="/register" element={<Register />} />
-
-        {/* --- ROUTES TABLEAUX DE BORD --- */}
-        {/* Tableau de bord du client */}
-        <Route path="/dashboard-client" element={<DashboardClient />} />
-        
-        {/* Nouveau : Tableau de bord prestataire (Coiffeuses/Salons) */}
-        <Route path="/dashboard-pro" element={<DashboardPro />} />
-
-        {/* Gérer les prestations*/}
-        <Route path="/manage-services" element={<ManageServices />} />
-
-        {/* Formulaire de réservation avec catégorie */}
-        <Route path="/booking/:salonId" element={<BookingForm />} />
-        
-        {/*RDV Client */}
-        <Route path="/mes-rdv" element={<MesRdv />} />
-
-        {/* Planning Pro */}
-        <Route path="/planning" element={<Planning />} />
-
-        {/* Gestion équipe */}
-        <Route path="/manage-employees" element={<ManageEmployees />} />
-      </Routes>
+      <Suspense fallback={<PageLoader />}>
+        <Routes>
+          <Route path="/"                   element={<Home />} />
+          <Route path="/devenir-partenaire" element={<DevenirPartenaire />} />
+          <Route path="/login"              element={<Login />} />
+          <Route path="/register"           element={<Register />} />
+          <Route path="/coiffeuses"         element={<Coiffeuses />} />
+          <Route path="/coiffeuses/:city"   element={<Coiffeuses />} />
+          <Route path="/manucure"           element={<Manucure />} />
+          <Route path="/manucure/:city"     element={<Manucure />} />
+          <Route path="/maquillage"         element={<Maquillage />} />
+          <Route path="/maquillage/:city"   element={<Maquillage />} />
+          <Route path="/cils"               element={<Cils />} />
+          <Route path="/cils/:city"         element={<Cils />} />
+          <Route path="/salon/:id"          element={<ProfilSalon />} />
+          <Route path="/booking/:salonId"   element={<BookingForm />} />
+          <Route path="/dashboard-client"   element={<DashboardClient />} />
+          <Route path="/mes-rdv"            element={<MesRdv />} />
+          <Route path="/dashboard-pro"      element={<DashboardPro />} />
+          <Route path="/manage-services"    element={<ManageServices />} />
+          <Route path="/manage-employees"   element={<ManageEmployees />} />
+          <Route path="/planning"           element={<Planning />} />
+        </Routes>
+      </Suspense>
     </>
   );
 }

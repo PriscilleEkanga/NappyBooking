@@ -1,6 +1,66 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 
+// --- Données fictives pour tester sans backend ---
+const MOCK_BOOKINGS = [
+  {
+    _id: 'b1',
+    service: 'Box Braids',
+    salonName: 'MistralCare',
+    salonAddress: '15 rue Gauthey, 75017 Paris',
+    employeeName: 'Aminata D.',
+    date: '2026-03-15',
+    time: '10:00',
+    price: 120,
+    depositAmount: 36,
+    status: 'confirmed',
+    category: 'coiffure',
+    bookingReference: 'NB-A1B2C3D4',
+  },
+  {
+    _id: 'b2',
+    service: 'Volume Russe',
+    salonName: "L'Atelier du Regard",
+    salonAddress: '40 rue du Bac, 75007 Paris',
+    employeeName: 'Fatoumata K.',
+    date: '2026-03-22',
+    time: '14:30',
+    price: 80,
+    depositAmount: 24,
+    status: 'pending',
+    category: 'cils',
+    bookingReference: 'NB-E5F6G7H8',
+  },
+  {
+    _id: 'b3',
+    service: 'French Manucure',
+    salonName: 'Nail Gallery Paris',
+    salonAddress: '22 rue de Rivoli, 75001 Paris',
+    employeeName: 'Marlène B.',
+    date: '2026-02-10',
+    time: '11:00',
+    price: 45,
+    depositAmount: 14,
+    status: 'completed',
+    category: 'manucure',
+    bookingReference: 'NB-I9J0K1L2',
+  },
+  {
+    _id: 'b4',
+    service: 'Maquillage Soirée',
+    salonName: 'Studio Glam Paris',
+    salonAddress: '15 Avenue Montaigne, 75008 Paris',
+    employeeName: 'Aminata D.',
+    date: '2026-01-28',
+    time: '16:00',
+    price: 75,
+    depositAmount: 23,
+    status: 'cancelled',
+    category: 'maquillage',
+    bookingReference: 'NB-M3N4O5P6',
+  },
+];
+
 const MesRdv = () => {
   const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
@@ -60,65 +120,6 @@ const MesRdv = () => {
     fetchBookings();
   }, []);
 
-  // --- Données fictives pour tester sans backend ---
-  const MOCK_BOOKINGS = [
-    {
-      _id: 'b1',
-      service: 'Box Braids',
-      salonName: 'MistralCare',
-      salonAddress: '15 rue Gauthey, 75017 Paris',
-      employeeName: 'Aminata D.',
-      date: '2026-03-15',
-      time: '10:00',
-      price: 120,
-      depositAmount: 36,
-      status: 'confirmed',
-      category: 'coiffure',
-      bookingReference: 'NB-A1B2C3D4',
-    },
-    {
-      _id: 'b2',
-      service: 'Volume Russe',
-      salonName: "L'Atelier du Regard",
-      salonAddress: '40 rue du Bac, 75007 Paris',
-      employeeName: 'Fatoumata K.',
-      date: '2026-03-22',
-      time: '14:30',
-      price: 80,
-      depositAmount: 24,
-      status: 'pending',
-      category: 'cils',
-      bookingReference: 'NB-E5F6G7H8',
-    },
-    {
-      _id: 'b3',
-      service: 'French Manucure',
-      salonName: 'Nail Gallery Paris',
-      salonAddress: '22 rue de Rivoli, 75001 Paris',
-      employeeName: 'Marlène B.',
-      date: '2026-02-10',
-      time: '11:00',
-      price: 45,
-      depositAmount: 14,
-      status: 'completed',
-      category: 'manucure',
-      bookingReference: 'NB-I9J0K1L2',
-    },
-    {
-      _id: 'b4',
-      service: 'Maquillage Soirée',
-      salonName: 'Studio Glam Paris',
-      salonAddress: '15 Avenue Montaigne, 75008 Paris',
-      employeeName: 'Aminata D.',
-      date: '2026-01-28',
-      time: '16:00',
-      price: 75,
-      depositAmount: 23,
-      status: 'cancelled',
-      category: 'maquillage',
-      bookingReference: 'NB-M3N4O5P6',
-    },
-  ];
 
   // --- Séparer RDV à venir / passés ---
   const today = new Date();

@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 // --- Données fictives (à remplacer par appel API GET /api/bookings/pro) ---
 const MOCK_APPOINTMENTS = [
@@ -20,7 +20,6 @@ const JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const MOIS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 
 const Planning = () => {
-  const navigate = useNavigate();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
   const [currentMonth, setCurrentMonth] = useState(new Date(2026, 2, 1)); // Mars 2026
   const [selectedDate, setSelectedDate] = useState('2026-03-01');
@@ -53,7 +52,7 @@ const Planning = () => {
       }
     };
     fetchAppointments();
-  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+  }, []);
 
   const colors = {
     terracotta: '#B37256',

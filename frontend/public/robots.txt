@@ -1,0 +1,10 @@
+User-agent: *
+Allow: /
+Disallow: /dashboard-client
+Disallow: /dashboard-pro
+Disallow: /manage-services
+Disallow: /manage-employees
+Disallow: /planning
+Disallow: /mes-rdv
+
+Sitemap: https://nappybooking.vercel.app/sitemap.xml

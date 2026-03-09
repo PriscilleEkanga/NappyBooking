@@ -112,7 +112,7 @@ function BookingForm() {
 
   const [form, setForm] = useState({ firstName: '', lastName: '', email: '', phone: '', note: '' });
   const [errors, setErrors] = useState({});
-  const [isLoading, setIsLoading] = useState(false);
+  const [_isLoading, setIsLoading] = useState(false);
   const [bookingRef, setBookingRef] = useState('');
   const [paypalLoaded, setPaypalLoaded] = useState(false);
   const [paypalError, setPaypalError] = useState('');
@@ -194,7 +194,7 @@ function BookingForm() {
         setPaypalError('Paiement annulé. Vous pouvez réessayer.');
       },
     }).render('#paypal-button-container');
-  }, [paypalLoaded, formValidated, selectedService]);
+  }, [paypalLoaded, formValidated, selectedService]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Simule les créneaux déjà pris (à remplacer par un appel API)
   const [bookedSlots] = useState(["10:00", "14:00", "16:30"]);

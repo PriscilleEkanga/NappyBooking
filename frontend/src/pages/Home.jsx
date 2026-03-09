@@ -142,6 +142,7 @@ function Home() {
   };
 
   return (
+    <main aria-label="Contenu principal">
     <div style={{ backgroundColor: colors.porcelain, overflowX: "hidden" }}>
       {/* HERO SECTION */}
       <section
@@ -225,7 +226,7 @@ function Home() {
               {!isMobile && (
                 <label
                   style={{
-                    color: "#717171",
+                    color: "#595959",
                     fontSize: "0.85rem",
                     marginBottom: "4px",
                     textAlign: "left",
@@ -270,7 +271,7 @@ function Home() {
               {!isMobile && (
                 <label
                   style={{
-                    color: "#717171",
+                    color: "#595959",
                     fontSize: "0.85rem",
                     marginBottom: "4px",
                     textAlign: "left",
@@ -382,7 +383,7 @@ function Home() {
         }}
       >
         <div style={{ flex: 1, textAlign: "left", width: "100%" }}>
-          <h3
+          <h2
             style={{
               fontSize: isMobile ? "2.2rem" : "3rem",
               fontWeight: "800",
@@ -391,7 +392,7 @@ function Home() {
             }}
           >
             Découvrez nos services
-          </h3>
+          </h2>
           <div style={{ minHeight: isMobile ? "auto" : "220px" }}>
             <h3
               style={{
@@ -534,7 +535,7 @@ function Home() {
       >
         <div style={{ maxWidth: "1100px", margin: "0 auto" }}>
           <div style={{ textAlign: "center", marginBottom: "60px" }}>
-            <h3
+            <h2
               style={{
                 fontSize: isMobile ? "2rem" : "3rem",
                 fontWeight: "800",
@@ -543,7 +544,7 @@ function Home() {
               }}
             >
               Plus qu'une plateforme de réservation
-            </h3>
+            </h2>
             <p
               style={{
                 fontSize: "1.2rem",
@@ -687,7 +688,7 @@ function Home() {
         <div
           style={{ maxWidth: "1200px", margin: "0 auto", textAlign: "center" }}
         >
-          <h3
+          <h2
             style={{
               fontSize: isMobile ? "1.8rem" : "2.8rem",
               fontWeight: "800",
@@ -696,7 +697,7 @@ function Home() {
             }}
           >
             Vous êtes un professionnel ? Découvrez la prise de RDV en ligne !
-          </h3>
+          </h2>
           <p
             style={{
               fontSize: "1.1rem",
@@ -977,7 +978,7 @@ function Home() {
         }}
       >
         <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-          <h3
+          <h2
             style={{
               fontSize: isMobile ? "1.8rem" : "2.2rem",
               fontWeight: "800",
@@ -986,7 +987,7 @@ function Home() {
             }}
           >
             Trouvez votre établissement partout en France
-          </h3>
+          </h2>
 
           <div
             style={{
@@ -1164,7 +1165,7 @@ function Home() {
         }}
       >
         <div style={{ maxWidth: "800px", margin: "0 auto" }}>
-          <h3
+          <h2
             style={{
               fontSize: isMobile ? "2rem" : "2.8rem",
               fontWeight: "800",
@@ -1174,7 +1175,7 @@ function Home() {
             }}
           >
             Les questions fréquentes
-          </h3>
+          </h2>
 
           <div style={{ display: "flex", flexDirection: "column" }}>
             {[
@@ -1489,6 +1490,7 @@ function Home() {
         </div>
       </footer>
     </div>
+  </main>
   );
 }
 

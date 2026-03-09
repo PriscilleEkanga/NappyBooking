@@ -96,7 +96,7 @@ const Navbar = () => {
   };
 
   return (
-    <nav style={{ 
+    <nav aria-label="Navigation principale" style={{ 
       display: 'flex', 
       justifyContent: 'space-between', 
       alignItems: 'center', 
@@ -114,16 +114,18 @@ const Navbar = () => {
       <div style={{ flex: isMobile ? 1 : 'none' }}>
         {isMobile ? (
           <button 
-            onClick={() => setMenuOpen(!menuOpen)} 
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label={menuOpen ? 'Fermer le menu' : 'Ouvrir le menu'}
+            aria-expanded={menuOpen}
             style={{ background: 'none', border: 'none', fontSize: '1.8rem', color: textColor, cursor: 'pointer' }}
           >
             {menuOpen ? '✕' : '☰'}
           </button>
         ) : (
-          <Link to="/" style={{ display: 'flex', alignItems: 'center' }}>
+          <Link to="/" aria-label="Retour à l'accueil" style={{ display: 'flex', alignItems: 'center' }}>
             <img 
               src={logo} 
-              alt="Logo" 
+              alt="NappyBooking - Accueil" 
               style={{ height: '95px', filter: logoFilter, transition: 'all 0.3s ease', marginTop: '5px' }} 
             />
           </Link>
@@ -133,8 +135,8 @@ const Navbar = () => {
       {/* --- MILIEU (Mobile) --- */}
       {isMobile && (
         <div style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-          <Link to="/">
-            <img src={logo} alt="Logo" style={{ height: '90px', filter: logoFilter, transition: 'all 0.3s ease' }} />
+          <Link to="/" aria-label="Retour à l'accueil">
+            <img src={logo} alt="NappyBooking - Accueil" style={{ height: '90px', filter: logoFilter, transition: 'all 0.3s ease' }} />
           </Link>
         </div>
       )}
@@ -181,12 +183,14 @@ const Navbar = () => {
             </Link>
           </>
         ) : (
-          <Link to={user ? getDashboardPath() : "/login"} style={{ 
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            backgroundColor: isScrolled ? colors.black : 'rgba(0,0,0,0.6)', 
-            padding: '8px', borderRadius: '12px', width: '40px', height: '40px'
-          }}>
-            <img src={userIcon} alt="Profile" style={{ height: '22px', filter: 'brightness(0) invert(1)' }} />
+          <Link to={user ? getDashboardPath() : "/login"}
+            aria-label={user ? 'Mon espace personnel' : 'Se connecter'}
+            style={{ 
+              display: 'flex', alignItems: 'center', justifyContent: 'center',
+              backgroundColor: isScrolled ? colors.black : 'rgba(0,0,0,0.6)', 
+              padding: '8px', borderRadius: '12px', width: '40px', height: '40px'
+            }}>
+            <img src={userIcon} alt="" role="presentation" style={{ height: '22px', filter: 'brightness(0) invert(1)' }} />
           </Link>
         )}
       </div>
