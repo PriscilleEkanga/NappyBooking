@@ -123,7 +123,7 @@ function BookingForm() {
   useEffect(() => {
     if (window.paypal) { setPaypalLoaded(true); return; }
     const script = document.createElement('script');
-    script.src = 'https://www.paypal.com/sdk/js?client-id=AWMm3V6UKG49H7oFeBgyP9fqX60nKb5Gw4CHLYNkl819dGHdU0xXTomny-yiyA19OKrlnyJkU_fUjVQ2&currency=EUR';
+    script.src = 'https://www.paypal.com/sdk/js?client-id=AWMm3V6UKG49H7oFeBgyP9fqX60nKb5Gw4CHLYNkl819dGHdU0xXTomny-yiyA19OKrlnyJkU_fUjVQ2&currency=EUR&intent=capture';
     script.onload = () => setPaypalLoaded(true);
     script.onerror = () => setPaypalError('Impossible de charger PayPal. Vérifiez votre connexion.');
     document.body.appendChild(script);
@@ -136,7 +136,7 @@ function BookingForm() {
     if (!container) return;
     container.innerHTML = '';
 
-    const depositAmount = Math.round(selectedService.price * 0.3);
+    const depositAmount = parseFloat((selectedService.price * 0.3).toFixed(2));
 
     window.paypal.Buttons({
       style: { layout: 'vertical', color: 'gold', shape: 'rect', label: 'pay', height: 50 },
