@@ -123,7 +123,7 @@ function BookingForm() {
   useEffect(() => {
     if (window.paypal) { setPaypalLoaded(true); return; }
     const script = document.createElement('script');
-    script.src = 'https://www.paypal.com/sdk/js?client-id=AWMm3V6UKG49H7oFeBgyP9fqX60nKb5Gw4CHLYNkl819dGHdU0xXTomny-yiyA19OKrlnyJkU_fUjVQ2&currency=EUR&intent=capture';
+    script.src = 'https://www.paypal.com/sdk/js?client-id=AZDhCrY5a9JLEXymDKZTY1dHUMqMjBMlkVVG1JLcQiyBj-rqFCOtznI7HS83NM6npkKTZgxcBBUDnSBj&currency=EUR&intent=capture';
     script.onload = () => setPaypalLoaded(true);
     script.onerror = () => setPaypalError('Impossible de charger PayPal. Vérifiez votre connexion.');
     document.body.appendChild(script);
