@@ -25,4 +25,14 @@ const protect = async (req, res, next) => {
   }
 };
 
-module.exports = { protect };
+const adminOnly = (req, res, next) => {
+  if (req.user && req.user.role === 'admin') return next();
+  res.status(403).json({ message: 'Accès réservé aux administrateurs.' });
+};
+
+const proOnly = (req, res, next) => {
+  if (req.user && (req.user.role === 'prestataire' || req.user.role === 'admin')) return next();
+  res.status(403).json({ message: 'Accès réservé aux prestataires.' });
+};
+
+module.exports = { protect, adminOnly, proOnly };

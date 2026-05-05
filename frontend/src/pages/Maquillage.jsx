@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import api from "../api";
 
 // Images des villes (communes)
 import imgParis from "../assets/paris.jpg";
@@ -21,6 +22,8 @@ const Maquillage = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [searchCity, setSearchCity] = useState("");
   const [isVisible, setIsVisible] = useState(false);
+  const [salons, setSalons] = useState([]);
+  const [loadingSalons, setLoadingSalons] = useState(false);
   const hypeSectionRef = useRef(null);
 
   useEffect(() => {
@@ -85,18 +88,20 @@ const Maquillage = () => {
     { id: 4, name: "Maquillage Éditorial", img: maq4, count: "25+ MUAs" },
   ];
 
-  const salonsData = [
-    { id: 1, name: "Studio Glam Paris", rating: 5.0, address: "15 Avenue Montaigne, 75008 Paris", city: "paris", price: "75€", tags: ["Glam", "Mariage"], img: maq1, images: [maq1, maq2, maq3] },
-    { id: 2, name: "Beauté Lyon", rating: 4.8, address: "5 Place Bellecour, 69002 Lyon", city: "lyon", price: "60€", tags: ["Naturel", "Cours"], img: maq3, images: [maq3, maq4, maq1] },
-  ];
-
-  const filteredSalons = city
-    ? salonsData.filter((s) => s.city.toLowerCase() === city.toLowerCase())
-    : [];
+  useEffect(() => {
+    if (!city) return;
+    setLoadingSalons(true);
+    api.get(`/prestataires?city=${city.toLowerCase()}&categorie=maquillage`)
+      .then(({ data }) => setSalons(data))
+      .catch(() => setSalons([]))
+      .finally(() => setLoadingSalons(false));
+  }, [city]);
 
   const handleSearch = () => {
     if (searchCity.trim()) navigate(`/maquillage/${searchCity.toLowerCase().trim()}`);
   };
+
+  const buildSalonUrl = (salon) => `/salon/${salon._id}`;
 
   if (city) {
     return (
@@ -108,40 +113,46 @@ const Maquillage = () => {
           <h1 style={{ fontSize: "1.8rem", fontWeight: "900", margin: "20px 0 10px" }}>
             Make-up Artists à {city.charAt(0).toUpperCase() + city.slice(1)}
           </h1>
-          <p style={{ color: colors.gray, marginBottom: "30px" }}>{filteredSalons.length} maquilleuses trouvées</p>
+          <p style={{ color: colors.gray, marginBottom: "30px" }}>
+            {loadingSalons ? "Recherche en cours..." : `${salons.length} maquilleuse${salons.length > 1 ? 's' : ''} trouvée${salons.length > 1 ? 's' : ''}`}
+          </p>
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            {filteredSalons.map((salon) => (
-              <div key={salon.id} style={{ display: "flex", border: "1px solid #EEE", borderRadius: "16px", overflow: "hidden" }}>
-                <div 
-                  onClick={() => navigate(`/salon/${salon.id}?category=maquillage&name=${encodeURIComponent(salon.name)}&address=${encodeURIComponent(salon.address)}&rating=${salon.rating}&price=${encodeURIComponent(salon.price)}&tags=${encodeURIComponent(JSON.stringify(salon.tags))}&img=${encodeURIComponent(salon.img)}&images=${encodeURIComponent(JSON.stringify(salon.images || [salon.img]))}`)}
-                  style={{ cursor: 'pointer', flexShrink: 0 }}
+            {loadingSalons ? (
+              <p style={{ color: colors.gray, textAlign: "center", padding: "40px 0" }}>Chargement...</p>
+            ) : salons.length === 0 ? (
+              <p style={{ color: colors.gray, textAlign: "center", padding: "40px 0" }}>Aucune maquilleuse trouvée dans cette ville.</p>
+            ) : salons.map((salon) => (
+              <div key={salon._id} style={{ display: "flex", border: "1px solid #EEE", borderRadius: "16px", overflow: "hidden" }}>
+                <div
+                  onClick={() => navigate(buildSalonUrl(salon))}
+                  style={{ cursor: 'pointer', flexShrink: 0, width: "180px", height: "180px", backgroundColor: "#F5E8F0", display: "flex", alignItems: "center", justifyContent: "center" }}
                 >
-                  <img src={salon.img} alt={salon.name} style={{ width: "180px", height: "180px", objectFit: "cover", display: "block" }} />
+                  <span style={{ fontSize: "3rem" }}>💄</span>
                 </div>
                 <div style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <h3 
-                        onClick={() => navigate(`/salon/${salon.id}?category=maquillage&name=${encodeURIComponent(salon.name)}&address=${encodeURIComponent(salon.address)}&rating=${salon.rating}&price=${encodeURIComponent(salon.price)}&tags=${encodeURIComponent(JSON.stringify(salon.tags))}&img=${encodeURIComponent(salon.img)}&images=${encodeURIComponent(JSON.stringify(salon.images || [salon.img]))}`)}
-                        style={{ margin: 0, fontSize: "1.3rem", fontWeight: "800", cursor: "pointer", textDecoration: "none" }}
+                      <h3
+                        onClick={() => navigate(buildSalonUrl(salon))}
+                        style={{ margin: 0, fontSize: "1.3rem", fontWeight: "800", cursor: "pointer" }}
                         onMouseEnter={(e) => e.target.style.color = colors.terracotta}
                         onMouseLeave={(e) => e.target.style.color = colors.black}
                       >
-                        {salon.name}
+                        {salon.nom_salon}
                       </h3>
-                      <div style={{ fontWeight: "700", color: colors.gold }}>★ {salon.rating}</div>
+                      <div style={{ fontWeight: "700", color: colors.gold }}>★ {salon.note}</div>
                     </div>
-                    <p style={{ color: colors.gray, fontSize: "0.9rem", margin: "5px 0" }}>{salon.address}</p>
-                    <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
-                      {salon.tags.map((tag) => (
+                    <p style={{ color: colors.gray, fontSize: "0.9rem", margin: "5px 0" }}>{salon.adresse}</p>
+                    <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
+                      {(salon.tags || []).map((tag) => (
                         <span key={tag} style={{ backgroundColor: colors.lightGray, padding: "4px 10px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "600" }}>{tag}</span>
                       ))}
                     </div>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontWeight: "800", fontSize: "1.1rem" }}>Dès {salon.price}</span>
-                    <button 
-                      onClick={() => handleBookingClick(salon.id, salon.name, salon.address)} 
+                    <span style={{ fontWeight: "800", fontSize: "1.1rem" }}>Dès {salon.tarif_moyen}€</span>
+                    <button
+                      onClick={() => handleBookingClick(salon._id, salon.nom_salon, salon.adresse)}
                       style={{ backgroundColor: colors.black, color: "white", border: "none", padding: "10px 20px", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}
                     >
                       Réserver

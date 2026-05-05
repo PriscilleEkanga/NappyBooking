@@ -4,6 +4,14 @@ import { ViteImageOptimizer } from 'vite-plugin-image-optimizer'
 
 // https://vite.dev/config/
 export default defineConfig({
+  server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:5000',
+        changeOrigin: true,
+      },
+    },
+  },
   plugins: [
     react(),
     // Configuration de l'optimiseur d'images

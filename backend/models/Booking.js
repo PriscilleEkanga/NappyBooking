@@ -6,20 +6,33 @@ const bookingSchema = new mongoose.Schema({
     ref: 'User',
     required: true,
   },
-  prestataire: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
-    required: false, // optionnel pour l'instant
-  },
   salon: {
-    type: String, // ID du salon (string pour compatibilité données fictives)
-    required: false,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Prestataire',
+    required: true,
+  },
+  employe: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Employe',
+    default: null,
   },
 
   // --- Prestation ---
   service: {
-    type: String,
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Service',
     required: true,
+  },
+  // Snapshot au moment de la réservation (en cas de modif future du service)
+  service_snapshot: {
+    nom: String,
+    categorie: String,
+    duree: Number,
+    prix: Number,
+  },
+  nomSalon: {
+    type: String,
+    default: '',
   },
   duration: {
     type: Number, // en minutes

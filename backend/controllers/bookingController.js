@@ -1,13 +1,12 @@
 const Booking = require('../models/Booking');
+const Service = require('../models/Service');
+const Disponibilite = require('../models/Disponibilite');
 
 // ============================================================
 //  VÉRIFICATION PAYPAL
-//  On appelle l'API PayPal pour confirmer que le paiement
-//  a bien été capturé AVANT de créer la réservation en BDD.
 // ============================================================
 const verifyPaypalPayment = async (paypalOrderId, expectedAmount) => {
   try {
-    // 1. Obtenir un token d'accès PayPal
     const credentials = Buffer.from(
       `${process.env.PAYPAL_CLIENT_ID}:${process.env.PAYPAL_CLIENT_SECRET}`
     ).toString('base64');
@@ -23,12 +22,8 @@ const verifyPaypalPayment = async (paypalOrderId, expectedAmount) => {
 
     const tokenData = await tokenRes.json();
     const accessToken = tokenData.access_token;
+    if (!accessToken) throw new Error('Impossible d\'obtenir le token PayPal');
 
-    if (!accessToken) {
-      throw new Error('Impossible d\'obtenir le token PayPal');
-    }
-
-    // 2. Vérifier l'ordre PayPal
     const orderRes = await fetch(`https://api-m.sandbox.paypal.com/v2/checkout/orders/${paypalOrderId}`, {
       headers: {
         'Authorization': `Bearer ${accessToken}`,
@@ -37,8 +32,6 @@ const verifyPaypalPayment = async (paypalOrderId, expectedAmount) => {
     });
 
     const order = await orderRes.json();
-
-    // 3. Vérifications de sécurité
     if (order.status !== 'COMPLETED') {
       throw new Error(`Paiement non complété. Statut: ${order.status}`);
     }
@@ -46,17 +39,12 @@ const verifyPaypalPayment = async (paypalOrderId, expectedAmount) => {
     const paidAmount = parseFloat(order.purchase_units[0].payments.captures[0].amount.value);
     const paidCurrency = order.purchase_units[0].payments.captures[0].amount.currency_code;
 
-    if (paidCurrency !== 'EUR') {
-      throw new Error('Devise incorrecte');
-    }
-
-    // Tolérance de 1 centime pour les arrondis
+    if (paidCurrency !== 'EUR') throw new Error('Devise incorrecte');
     if (Math.abs(paidAmount - expectedAmount) > 0.01) {
       throw new Error(`Montant incorrect. Reçu: ${paidAmount}€, Attendu: ${expectedAmount}€`);
     }
 
     return { success: true, paidAmount, order };
-
   } catch (error) {
     return { success: false, error: error.message };
   }
@@ -64,96 +52,97 @@ const verifyPaypalPayment = async (paypalOrderId, expectedAmount) => {
 
 
 // ============================================================
-//  @desc    Créer une réservation (après vérification PayPal)
-//  @route   POST /api/bookings
-//  @access  Privé (JWT requis)
+//  @desc   Créer une réservation (après paiement PayPal)
+//  @route  POST /api/bookings
+//  @access Privé (client)
 // ============================================================
 exports.createBooking = async (req, res) => {
   try {
     const {
       salonId,
       serviceId,
-      service,
+      employeId,
       date,
       heure,
-      duration,
-      client,
-      note,
-      prix,
-      depositAmount,
+      client_info,
       paypalOrderId,
+      depositAmount,
     } = req.body;
 
-    // 1. Validation des champs obligatoires
-    if (!service || !date || !heure || !paypalOrderId || !depositAmount) {
+    if (!salonId || !serviceId || !date || !heure || !paypalOrderId || !depositAmount) {
       return res.status(400).json({
-        message: 'Données manquantes : service, date, heure, paypalOrderId et depositAmount sont requis.',
+        message: 'Données manquantes : salonId, serviceId, date, heure, paypalOrderId et depositAmount sont requis.',
       });
     }
 
-    // 2. Vérifier que cette commande PayPal n'a pas déjà été utilisée
+    // Vérifier unicité de l'ordre PayPal
     const existingBooking = await Booking.findOne({ paypalOrderId });
     if (existingBooking) {
-      return res.status(400).json({
-        message: 'Ce paiement a déjà été utilisé pour une réservation.',
-      });
+      return res.status(400).json({ message: 'Ce paiement a déjà été utilisé pour une réservation.' });
     }
 
-    // 3. Vérification du paiement PayPal
+    // Récupérer le service pour le snapshot
+    const service = await Service.findById(serviceId);
+    if (!service) return res.status(404).json({ message: 'Service introuvable.' });
+
+    // Vérification PayPal
     const paypalCheck = await verifyPaypalPayment(paypalOrderId, parseFloat(depositAmount));
     if (!paypalCheck.success) {
-      return res.status(402).json({
-        message: `Paiement invalide : ${paypalCheck.error}`,
-      });
+      return res.status(402).json({ message: `Paiement invalide : ${paypalCheck.error}` });
     }
 
-    // 4. Créer la réservation en BDD
+    // Créer la réservation
     const booking = await Booking.create({
-      client: req.user.id, // vient du middleware protect
-      salon: salonId || null,
-      service,
-      duration: duration || 60,
+      client: req.user.id,
+      salon: salonId,
+      employe: employeId || null,
+      service: serviceId,
+      service_snapshot: {
+        nom: service.nom,
+        categorie: service.categorie,
+        duree: service.duree,
+        prix: service.prix,
+      },
+      nomSalon: req.body.nomSalon || '',
+      duration: service.duree,
       date_rendezvous: new Date(date),
       heure,
-      client_info: {
-        firstName: client?.firstName || '',
-        lastName: client?.lastName || '',
-        email: client?.email || '',
-        phone: client?.phone || '',
-        note: note || '',
-      },
-      prix: parseFloat(prix) || parseFloat(depositAmount) / 0.3,
+      client_info: client_info || {},
+      prix: service.prix,
       acompte: parseFloat(depositAmount),
       paypalOrderId,
       paypalStatus: 'COMPLETED',
       statut: 'en attente',
     });
 
-    // 5. Réponse succès
+    // Marquer le créneau comme réservé
+    await Disponibilite.findOneAndUpdate(
+      { salon: salonId, date: new Date(date), heure_debut: heure, statut: 'disponible' },
+      { statut: 'reserve', booking: booking._id }
+    );
+
     res.status(201).json({
       message: 'Réservation créée avec succès',
       bookingReference: booking.bookingReference,
       booking,
     });
-
   } catch (error) {
     console.error('Erreur createBooking:', error);
-    res.status(500).json({
-      message: 'Erreur serveur lors de la réservation',
-      error: error.message,
-    });
+    res.status(500).json({ message: 'Erreur serveur lors de la réservation', error: error.message });
   }
 };
 
 
 // ============================================================
-//  @desc    Récupérer les RDV du client connecté
-//  @route   GET /api/bookings/me
-//  @access  Privé (JWT requis)
+//  @desc   Mes réservations (client connecté)
+//  @route  GET /api/bookings/me
+//  @access Privé (client)
 // ============================================================
 exports.getMyBookings = async (req, res) => {
   try {
     const bookings = await Booking.find({ client: req.user.id })
+      .populate('salon', 'nom_salon adresse telephone')
+      .populate('employe', 'prenom nom')
       .sort({ date_rendezvous: -1 });
 
     res.json(bookings);
@@ -164,14 +153,19 @@ exports.getMyBookings = async (req, res) => {
 
 
 // ============================================================
-//  @desc    Récupérer les RDV du salon pro connecté
-//  @route   GET /api/bookings/pro
-//  @access  Privé (JWT requis, rôle prestataire)
+//  @desc   Réservations du salon (pro connecté)
+//  @route  GET /api/bookings/pro
+//  @access Privé (prestataire)
 // ============================================================
 exports.getProBookings = async (req, res) => {
   try {
-    const bookings = await Booking.find({ prestataire: req.user.id })
+    const Prestataire = require('../models/Prestataire');
+    const salon = await Prestataire.findOne({ user: req.user.id });
+    if (!salon) return res.status(404).json({ message: 'Salon introuvable.' });
+
+    const bookings = await Booking.find({ salon: salon._id })
       .populate('client', 'nom_client prenom_client email')
+      .populate('employe', 'prenom nom')
       .sort({ date_rendezvous: 1 });
 
     res.json(bookings);
@@ -182,23 +176,18 @@ exports.getProBookings = async (req, res) => {
 
 
 // ============================================================
-//  @desc    Annuler un RDV
-//  @route   PUT /api/bookings/:id/cancel
-//  @access  Privé (JWT requis)
+//  @desc   Annuler un RDV (client)
+//  @route  PUT /api/bookings/:id/cancel
+//  @access Privé (client)
 // ============================================================
 exports.cancelBooking = async (req, res) => {
   try {
     const booking = await Booking.findById(req.params.id);
+    if (!booking) return res.status(404).json({ message: 'Réservation introuvable.' });
 
-    if (!booking) {
-      return res.status(404).json({ message: 'Réservation introuvable.' });
-    }
-
-    // Vérifier que c'est bien le client qui annule
     if (booking.client.toString() !== req.user.id) {
       return res.status(403).json({ message: 'Non autorisé.' });
     }
-
     if (booking.statut === 'annulé') {
       return res.status(400).json({ message: 'Ce RDV est déjà annulé.' });
     }
@@ -206,11 +195,13 @@ exports.cancelBooking = async (req, res) => {
     booking.statut = 'annulé';
     await booking.save();
 
-    res.json({
-      message: 'Réservation annulée. L\'acompte ne sera pas remboursé.',
-      booking,
-    });
+    // Libérer le créneau
+    await Disponibilite.findOneAndUpdate(
+      { booking: booking._id },
+      { statut: 'disponible', booking: null }
+    );
 
+    res.json({ message: "Réservation annulée. L'acompte ne sera pas remboursé.", booking });
   } catch (error) {
     res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }
@@ -218,23 +209,39 @@ exports.cancelBooking = async (req, res) => {
 
 
 // ============================================================
-//  @desc    Confirmer un RDV (action pro)
-//  @route   PUT /api/bookings/:id/confirm
-//  @access  Privé (JWT requis, rôle prestataire)
+//  @desc   Confirmer un RDV (pro)
+//  @route  PUT /api/bookings/:id/confirm
+//  @access Privé (prestataire)
 // ============================================================
 exports.confirmBooking = async (req, res) => {
   try {
-    const booking = await Booking.findById(req.params.id);
-
-    if (!booking) {
-      return res.status(404).json({ message: 'Réservation introuvable.' });
-    }
-
-    booking.statut = 'confirmé';
-    await booking.save();
-
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { statut: 'confirmé' },
+      { new: true }
+    );
+    if (!booking) return res.status(404).json({ message: 'Réservation introuvable.' });
     res.json({ message: 'Réservation confirmée.', booking });
+  } catch (error) {
+    res.status(500).json({ message: 'Erreur serveur', error: error.message });
+  }
+};
 
+
+// ============================================================
+//  @desc   Marquer un RDV comme terminé (pro)
+//  @route  PUT /api/bookings/:id/terminer
+//  @access Privé (prestataire)
+// ============================================================
+exports.terminerBooking = async (req, res) => {
+  try {
+    const booking = await Booking.findByIdAndUpdate(
+      req.params.id,
+      { statut: 'terminé' },
+      { new: true }
+    );
+    if (!booking) return res.status(404).json({ message: 'Réservation introuvable.' });
+    res.json({ message: 'Prestation marquée comme terminée.', booking });
   } catch (error) {
     res.status(500).json({ message: 'Erreur serveur', error: error.message });
   }

@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import api from '../api';
 
 // --- Données fictives pour tester sans backend ---
 const MOCK_BOOKINGS = [
@@ -99,19 +100,10 @@ const MesRdv = () => {
     const fetchBookings = async () => {
       setIsLoading(true);
       try {
-        const token = localStorage.getItem('token');
-        const response = await fetch('https://nappybooking.onrender.com/api/bookings/me', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-
-        if (!response.ok) throw new Error('Erreur API');
-
-        const data = await response.json();
+        const { data } = await api.get('/bookings/me');
         setBookings(data);
       } catch {
-        // Fallback : localStorage si l'API ne répond pas encore
-        const saved = localStorage.getItem('userAppointments');
-        setBookings(saved ? JSON.parse(saved) : MOCK_BOOKINGS);
+        setBookings(MOCK_BOOKINGS);
       } finally {
         setIsLoading(false);
       }
@@ -126,13 +118,13 @@ const MesRdv = () => {
   today.setHours(0, 0, 0, 0);
 
   const upcomingBookings = bookings.filter(b => {
-    const bookingDate = new Date(b.date);
-    return bookingDate >= today && b.status !== 'cancelled';
+    const bookingDate = new Date(b.date_rendezvous || b.date);
+    return bookingDate >= today && b.statut !== 'annulé';
   });
 
   const pastBookings = bookings.filter(b => {
-    const bookingDate = new Date(b.date);
-    return bookingDate < today || b.status === 'cancelled' || b.status === 'completed';
+    const bookingDate = new Date(b.date_rendezvous || b.date);
+    return bookingDate < today || b.statut === 'annulé' || b.statut === 'terminé';
   });
 
   // --- Annulation ---
@@ -146,22 +138,14 @@ const MesRdv = () => {
     setCancellingId(selectedBooking._id);
 
     try {
-      const token = localStorage.getItem('token');
-      const response = await fetch(`https://nappybooking.onrender.com/api/bookings/${selectedBooking._id}/cancel`, {
-        method: 'PUT',
-        headers: { 'Authorization': `Bearer ${token}` },
-      });
+      await api.put(`/bookings/${selectedBooking._id}/cancel`);
 
-      if (!response.ok) throw new Error('Erreur API');
-
-      // Mise à jour locale
       setBookings(prev =>
-        prev.map(b => b._id === selectedBooking._id ? { ...b, status: 'cancelled' } : b)
+        prev.map(b => b._id === selectedBooking._id ? { ...b, statut: 'annulé' } : b)
       );
     } catch {
-      // Fallback localStorage
       setBookings(prev =>
-        prev.map(b => b._id === selectedBooking._id ? { ...b, status: 'cancelled' } : b)
+        prev.map(b => b._id === selectedBooking._id ? { ...b, statut: 'annulé' } : b)
       );
     } finally {
       setCancellingId(null);
@@ -191,15 +175,15 @@ const MesRdv = () => {
   };
 
   const statusConfig = {
-    confirmed: { label: 'Confirmé', bg: colors.successBg, color: colors.success },
-    pending:   { label: 'En attente', bg: colors.warningBg, color: colors.warning },
-    completed: { label: 'Terminé', bg: '#F0F0F0', color: colors.gray },
-    cancelled: { label: 'Annulé', bg: colors.dangerBg, color: colors.danger },
+    'en attente': { label: 'En attente', bg: colors.warningBg, color: colors.warning },
+    'confirmé':   { label: 'Confirmé',   bg: colors.successBg, color: colors.success },
+    'terminé':    { label: 'Terminé',    bg: '#F0F0F0',        color: colors.gray },
+    'annulé':     { label: 'Annulé',     bg: colors.dangerBg,  color: colors.danger },
   };
 
   // --- CARTE RDV ---
   const BookingCard = ({ booking, showCancel = false }) => {
-    const status = statusConfig[booking.status] || statusConfig.confirmed;
+    const status = statusConfig[booking.statut] || statusConfig['en attente'];
 
     return (
       <div style={{
@@ -216,7 +200,7 @@ const MesRdv = () => {
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
             <div style={{
               width: '46px', height: '46px', borderRadius: '12px',
-              backgroundColor: categoryColor[booking.category] || colors.terracotta,
+              backgroundColor: categoryColor[booking.categorie || booking.category] || colors.terracotta,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               flexShrink: 0,
               color: colors.white,
@@ -224,14 +208,14 @@ const MesRdv = () => {
               fontSize: '0.75rem',
               letterSpacing: '0.5px',
             }}>
-              {categoryInitial[booking.category] || 'NB'}
+              {categoryInitial[booking.categorie || booking.category] || 'NB'}
             </div>
             <div>
               <p style={{ fontWeight: '800', fontSize: '1rem', margin: '0 0 3px', color: colors.black }}>
                 {booking.service}
               </p>
               <p style={{ fontSize: '0.85rem', color: colors.gray, margin: 0 }}>
-                {booking.salonName}
+                {booking.nomSalon || booking.salonName || '—'}
               </p>
             </div>
           </div>
@@ -256,19 +240,19 @@ const MesRdv = () => {
           <div>
             <p style={{ fontSize: '0.75rem', color: colors.gray, fontWeight: '700', textTransform: 'uppercase', margin: '0 0 2px' }}>Date & Heure</p>
             <p style={{ fontSize: '0.9rem', fontWeight: '600', color: colors.black, margin: 0 }}>
-              {formatDate(booking.date)} à {booking.time}
+              {formatDate(booking.date_rendezvous || booking.date)} à {booking.heure || booking.time}
             </p>
           </div>
           <div>
-            <p style={{ fontSize: '0.75rem', color: colors.gray, fontWeight: '700', textTransform: 'uppercase', margin: '0 0 2px' }}>Employée</p>
+            <p style={{ fontSize: '0.75rem', color: colors.gray, fontWeight: '700', textTransform: 'uppercase', margin: '0 0 2px' }}>Prestation</p>
             <p style={{ fontSize: '0.9rem', fontWeight: '600', color: colors.black, margin: 0 }}>
-              {booking.employeeName || booking.expert}
+              {booking.service}
             </p>
           </div>
           <div>
-            <p style={{ fontSize: '0.75rem', color: colors.gray, fontWeight: '700', textTransform: 'uppercase', margin: '0 0 2px' }}>Adresse</p>
+            <p style={{ fontSize: '0.75rem', color: colors.gray, fontWeight: '700', textTransform: 'uppercase', margin: '0 0 2px' }}>Salon</p>
             <p style={{ fontSize: '0.9rem', fontWeight: '600', color: colors.black, margin: 0 }}>
-              {booking.salonAddress}
+              {booking.nomSalon || booking.salonAddress || '—'}
             </p>
           </div>
           <div>
@@ -283,13 +267,13 @@ const MesRdv = () => {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <span style={{ fontSize: '0.85rem', color: colors.gray }}>Total : </span>
-            <span style={{ fontWeight: '800', fontSize: '1.1rem', color: colors.black }}>{booking.price}€</span>
+            <span style={{ fontWeight: '800', fontSize: '1.1rem', color: colors.black }}>{booking.prix || booking.price}€</span>
             <span style={{ fontSize: '0.8rem', color: colors.terracotta, marginLeft: '8px', fontWeight: '600' }}>
-              (Acompte payé : {booking.depositAmount}€)
+              (Acompte payé : {booking.acompte || booking.depositAmount}€)
             </span>
           </div>
 
-          {showCancel && booking.status !== 'cancelled' && (
+          {showCancel && booking.statut !== 'annulé' && (
             <button
               onClick={() => handleCancelClick(booking)}
               disabled={cancellingId === booking._id}

@@ -1,5 +1,6 @@
-  import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import api from '../api';
 
 const DashboardClient = () => {
   const navigate = useNavigate();
@@ -10,16 +11,11 @@ const DashboardClient = () => {
   const [userName] = useState(() => localStorage.getItem('userName') || 'Client');
   const [userEmail] = useState(() => localStorage.getItem('userEmail') || 'non renseigné');
 
-  // Initialisation : on cherche les RDV dans le localStorage, sinon tableau vide
   const [showSupportModal, setShowSupportModal] = useState(false);
   const [supportForm, setSupportForm] = useState({ subject: '', message: '' });
   const [supportSent, setSupportSent] = useState(false);
   const [supportLoading, setSupportLoading] = useState(false);
-
-  const [appointments, setAppointments] = useState(() => {
-    const saved = localStorage.getItem('userAppointments');
-    return saved ? JSON.parse(saved) : []; 
-  });
+  const [appointments, setAppointments] = useState([]);
 
   useEffect(() => {
     const handleResize = () => setIsMobile(window.innerWidth < 992);
@@ -27,19 +23,36 @@ const DashboardClient = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // --- FONCTION ANNULATION ---
-  const handleCancelAppointment = (id) => {
-    const confirmCancel = window.confirm(
-      "⚠️ ATTENTION : Êtes-vous sûr de vouloir annuler ce rendez-vous ?\n\nConformément à nos conditions générales, l'acompte versé ne sera pas remboursé."
-    );
+  // Chargement des prochains RDV depuis l'API
+  useEffect(() => {
+    const fetchUpcoming = async () => {
+      try {
+        const { data } = await api.get('/bookings/me');
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        const upcoming = data
+          .filter(b => new Date(b.date_rendezvous) >= today && b.statut !== 'annulé')
+          .sort((a, b) => new Date(a.date_rendezvous) - new Date(b.date_rendezvous))
+          .slice(0, 3);
+        setAppointments(upcoming);
+      } catch {
+        // silencieux si non connecté
+      }
+    };
+    fetchUpcoming();
+  }, []);
 
-    if (confirmCancel) {
-      // Filtrer pour supprimer le rendez-vous sélectionné
-      const updatedAppointments = appointments.filter(app => app.id !== id);
-      setAppointments(updatedAppointments);
-      // Mettre à jour le localStorage pour que la suppression soit permanente
-      localStorage.setItem('userAppointments', JSON.stringify(updatedAppointments));
-      alert("Le rendez-vous a été annulé (Acompte non remboursé).");
+  // --- FONCTION ANNULATION ---
+  const handleCancelAppointment = async (id) => {
+    const confirmCancel = window.confirm(
+      "ATTENTION : Êtes-vous sûr de vouloir annuler ce rendez-vous ?\n\nConformément à nos conditions générales, l'acompte versé ne sera pas remboursé."
+    );
+    if (!confirmCancel) return;
+    try {
+      await api.put(`/bookings/${id}/cancel`);
+      setAppointments(prev => prev.filter(app => app._id !== id));
+    } catch {
+      alert("Erreur lors de l'annulation. Veuillez réessayer.");
     }
   };
 
@@ -87,32 +100,33 @@ const DashboardClient = () => {
               
               {appointments.length > 0 ? (
                 appointments.map(app => (
-                  <div key={app.id} style={{ padding: '20px', border: '1px solid #F0F0F0', borderRadius: '12px', marginBottom: '15px' }}>
+                  <div key={app._id} style={{ padding: '20px', border: '1px solid #F0F0F0', borderRadius: '12px', marginBottom: '15px' }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '10px' }}>
-                      <span style={{ 
-                        fontSize: '0.75rem', 
-                        fontWeight: '800', 
-                        padding: '4px 10px', 
-                        borderRadius: '20px', 
-                        backgroundColor: app.status === 'Confirmé' ? '#E9F5E8' : '#FFF8E6',
-                        color: app.status === 'Confirmé' ? colors.success : colors.warning
+                      <span style={{
+                        fontSize: '0.75rem',
+                        fontWeight: '800',
+                        padding: '4px 10px',
+                        borderRadius: '20px',
+                        backgroundColor: app.statut === 'confirmé' ? '#E9F5E8' : '#FFF8E6',
+                        color: app.statut === 'confirmé' ? colors.success : colors.warning
                       }}>
-                        {app.status ? app.status.toUpperCase() : 'CONFIRMÉ'}
+                        {app.statut ? app.statut.toUpperCase() : 'EN ATTENTE'}
                       </span>
-                      <span style={{ fontWeight: '700' }}>{app.price}</span>
+                      <span style={{ fontWeight: '700' }}>{app.prix}€</span>
                     </div>
                     <h4 style={{ margin: '0 0 5px 0' }}>{app.service}</h4>
-                    <p style={{ margin: 0, fontSize: '0.9rem', color: colors.gray }}>Avec <strong>{app.expert}</strong></p>
-                    <p style={{ margin: '10px 0 15px', fontSize: '0.9rem', fontWeight: '600' }}>📅 {app.date} à {app.time}</p>
-                    
-                    <button 
-                      onClick={() => handleCancelAppointment(app.id)}
-                      style={{ 
-                        background: 'none', 
-                        border: 'none', 
-                        color: colors.danger, 
-                        fontWeight: '700', 
-                        cursor: 'pointer', 
+                    {app.nomSalon && <p style={{ margin: 0, fontSize: '0.9rem', color: colors.gray }}>{app.nomSalon}</p>}
+                    <p style={{ margin: '10px 0 15px', fontSize: '0.9rem', fontWeight: '600' }}>
+                      {new Date(app.date_rendezvous).toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })} à {app.heure}
+                    </p>
+                    <button
+                      onClick={() => handleCancelAppointment(app._id)}
+                      style={{
+                        background: 'none',
+                        border: 'none',
+                        color: colors.danger,
+                        fontWeight: '700',
+                        cursor: 'pointer',
                         fontSize: '0.85rem',
                         padding: 0,
                         textDecoration: 'underline'
@@ -285,18 +299,11 @@ const DashboardClient = () => {
                     onClick={async () => {
                       setSupportLoading(true);
                       try {
-                        await fetch('https://nappybooking.onrender.com/api/support', {
-                          method: 'POST',
-                          headers: {
-                            'Content-Type': 'application/json',
-                            'Authorization': `Bearer ${localStorage.getItem('token')}`,
-                          },
-                          body: JSON.stringify({
-                            email: userEmail,
-                            name: userName,
-                            subject: supportForm.subject,
-                            message: supportForm.message,
-                          }),
+                        await api.post('/support', {
+                          email: userEmail,
+                          name: userName,
+                          subject: supportForm.subject,
+                          message: supportForm.message,
                         });
                       } catch { /* silencieux si API pas prête */ }
                       finally {

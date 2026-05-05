@@ -1,32 +1,37 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import api from '../api';
 
-// --- Données fictives (à remplacer par appel API GET /api/bookings/pro) ---
-const MOCK_APPOINTMENTS = [
-  { _id: 'a1', client: 'Léa Z.', service: 'Knotless Braids', date: '2026-03-01', time: '10:00', duration: 210, price: 130, depositPaid: 39, status: 'confirmed' },
-  { _id: 'a2', client: 'Moussa D.', service: 'Contours + Soin', date: '2026-03-01', time: '14:30', duration: 60, price: 45, depositPaid: 14, status: 'pending' },
-  { _id: 'a3', client: 'Aïcha B.', service: 'Box Braids', date: '2026-03-05', time: '09:00', duration: 180, price: 120, depositPaid: 36, status: 'confirmed' },
-  { _id: 'a4', client: 'Sarah M.', service: 'Pose Lace Wig', date: '2026-03-05', time: '13:00', duration: 90, price: 90, depositPaid: 27, status: 'confirmed' },
-  { _id: 'a5', client: 'Fatou K.', service: 'Locks Entretien', date: '2026-03-10', time: '11:00', duration: 150, price: 100, depositPaid: 30, status: 'confirmed' },
-  { _id: 'a6', client: 'Nina T.', service: 'Braids Butterfly', date: '2026-03-12', time: '10:00', duration: 240, price: 150, depositPaid: 45, status: 'pending' },
-  { _id: 'a7', client: 'Amara S.', service: 'Vanilles / Twists', date: '2026-03-15', time: '14:00', duration: 120, price: 80, depositPaid: 24, status: 'confirmed' },
-  { _id: 'a8', client: 'Cécile N.', service: 'Soin Hydratant', date: '2026-03-18', time: '16:00', duration: 60, price: 45, depositPaid: 14, status: 'cancelled' },
-  { _id: 'a9', client: 'Diana F.', service: 'Crochet Braids', date: '2026-03-22', time: '09:30', duration: 180, price: 110, depositPaid: 33, status: 'confirmed' },
-  { _id: 'a10', client: 'Priya L.', service: 'Box Braids', date: '2026-03-25', time: '11:00', duration: 180, price: 120, depositPaid: 36, status: 'confirmed' },
-  { _id: 'a11', client: 'Mariam O.', service: 'Knotless Braids', date: '2026-03-28', time: '13:00', duration: 210, price: 130, depositPaid: 39, status: 'pending' },
-];
+const statutMap = { 'en attente': 'pending', 'confirmé': 'confirmed', 'annulé': 'cancelled', 'terminé': 'completed' };
+const statutMapReverse = { pending: 'en attente', confirmed: 'confirmé', cancelled: 'annulé', completed: 'terminé' };
 
 const JOURS = ['Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam', 'Dim'];
 const MOIS = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin', 'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 
+const normalizeBooking = (b) => ({
+  ...b,
+  date: new Date(b.date_rendezvous).toISOString().split('T')[0],
+  time: b.heure,
+  status: statutMap[b.statut] || 'pending',
+  depositPaid: b.acompte ?? 0,
+  price: b.prix ?? 0,
+  service: b.service_snapshot?.nom || '—',
+  duration: b.service_snapshot?.duree || b.duration || 60,
+  client: b.client?.prenom_client
+    ? `${b.client.prenom_client} ${b.client.nom_client}`
+    : b.client_info?.firstName || '—',
+});
+
 const Planning = () => {
+  const now = new Date();
   const [isMobile, setIsMobile] = useState(window.innerWidth < 992);
-  const [currentMonth, setCurrentMonth] = useState(new Date(2026, 2, 1)); // Mars 2026
-  const [selectedDate, setSelectedDate] = useState('2026-03-01');
-  const [appointments, setAppointments] = useState(MOCK_APPOINTMENTS);
-  const [isLoading, setIsLoading] = useState(false); // eslint-disable-line
+  const [currentMonth, setCurrentMonth] = useState(new Date(now.getFullYear(), now.getMonth(), 1));
+  const [selectedDate, setSelectedDate] = useState(now.toISOString().split('T')[0]);
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [showDetailModal, setShowDetailModal] = useState(false);
+  const [actionLoading, setActionLoading] = useState(false);
 
   const salonName = localStorage.getItem('userName') || 'Mon Salon';
 
@@ -36,22 +41,11 @@ const Planning = () => {
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  // Chargement depuis l'API
   useEffect(() => {
-    const fetchAppointments = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await fetch('https://nappybooking.onrender.com/api/bookings/pro', {
-          headers: { 'Authorization': `Bearer ${token}` },
-        });
-        if (!res.ok) throw new Error();
-        const data = await res.json();
-        setAppointments(data);
-      } catch {
-        setAppointments(MOCK_APPOINTMENTS);
-      }
-    };
-    fetchAppointments();
+    api.get('/bookings/pro')
+      .then(({ data }) => setAppointments(data.map(normalizeBooking)))
+      .catch(() => {})
+      .finally(() => setLoading(false));
   }, []);
 
   const colors = {
@@ -120,6 +114,13 @@ const Planning = () => {
     const m = minutes % 60;
     return m > 0 ? `${h}h${String(m).padStart(2, '0')}` : `${h}h`;
   };
+
+  if (loading) return (
+    <div style={{ paddingTop: '140px', textAlign: 'center' }}>
+      <div style={{ width: '36px', height: '36px', margin: '0 auto', border: '3px solid #F0E8E3', borderTop: '3px solid #B37256', borderRadius: '50%', animation: 'spin 0.8s linear infinite' }} />
+      <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
+    </div>
+  );
 
   // Stats du mois
   const monthKey = `${currentMonth.getFullYear()}-${String(currentMonth.getMonth() + 1).padStart(2, '0')}`;
@@ -470,48 +471,56 @@ const Planning = () => {
             </div>
 
             {/* Actions */}
-            <div style={{ display: 'flex', gap: '10px' }}>
+            <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
               {selectedAppointment.status === 'pending' && (
-                <button
-                  onClick={() => {
-                    setAppointments(prev =>
-                      prev.map(a => a._id === selectedAppointment._id ? { ...a, status: 'confirmed' } : a)
-                    );
-                    setShowDetailModal(false);
+                <button disabled={actionLoading}
+                  onClick={async () => {
+                    setActionLoading(true);
+                    try {
+                      await api.put(`/bookings/${selectedAppointment._id}/confirm`);
+                      setAppointments(prev => prev.map(a => a._id === selectedAppointment._id ? { ...a, status: 'confirmed' } : a));
+                      setShowDetailModal(false);
+                    } finally { setActionLoading(false); }
                   }}
-                  style={{
-                    flex: 1, padding: '13px', borderRadius: '10px',
-                    border: 'none', backgroundColor: colors.success,
-                    color: colors.white, fontWeight: '700', cursor: 'pointer',
-                  }}
+                  style={{ flex: 1, padding: '13px', borderRadius: '10px', border: 'none', backgroundColor: colors.success, color: colors.white, fontWeight: '700', cursor: 'pointer', minWidth: '100px' }}
                 >
                   Confirmer
                 </button>
               )}
-              <button
-                onClick={() => {
-                  setAppointments(prev =>
-                    prev.map(a => a._id === selectedAppointment._id ? { ...a, status: 'cancelled' } : a)
-                  );
-                  setShowDetailModal(false);
-                }}
-                style={{
-                  flex: 1, padding: '13px', borderRadius: '10px',
-                  border: `1.5px solid ${colors.border}`,
-                  backgroundColor: 'transparent',
-                  color: colors.danger, fontWeight: '700', cursor: 'pointer',
-                }}
-              >
-                Annuler le RDV
-              </button>
+              {selectedAppointment.status === 'confirmed' && (
+                <button disabled={actionLoading}
+                  onClick={async () => {
+                    setActionLoading(true);
+                    try {
+                      await api.put(`/bookings/${selectedAppointment._id}/terminer`);
+                      setAppointments(prev => prev.map(a => a._id === selectedAppointment._id ? { ...a, status: 'completed' } : a));
+                      setShowDetailModal(false);
+                    } finally { setActionLoading(false); }
+                  }}
+                  style={{ flex: 1, padding: '13px', borderRadius: '10px', border: 'none', backgroundColor: '#555', color: colors.white, fontWeight: '700', cursor: 'pointer', minWidth: '100px' }}
+                >
+                  Terminer
+                </button>
+              )}
+              {['pending', 'confirmed'].includes(selectedAppointment.status) && (
+                <button disabled={actionLoading}
+                  onClick={async () => {
+                    if (!confirm('Annuler ce rendez-vous ?')) return;
+                    setActionLoading(true);
+                    try {
+                      await api.put(`/bookings/${selectedAppointment._id}/cancel`);
+                      setAppointments(prev => prev.map(a => a._id === selectedAppointment._id ? { ...a, status: 'cancelled' } : a));
+                      setShowDetailModal(false);
+                    } finally { setActionLoading(false); }
+                  }}
+                  style={{ flex: 1, padding: '13px', borderRadius: '10px', border: `1.5px solid ${colors.border}`, backgroundColor: 'transparent', color: colors.danger, fontWeight: '700', cursor: 'pointer', minWidth: '100px' }}
+                >
+                  Annuler
+                </button>
+              )}
               <button
                 onClick={() => { setShowDetailModal(false); setSelectedAppointment(null); }}
-                style={{
-                  flex: 1, padding: '13px', borderRadius: '10px',
-                  border: `1.5px solid ${colors.border}`,
-                  backgroundColor: 'transparent',
-                  color: colors.black, fontWeight: '700', cursor: 'pointer',
-                }}
+                style={{ flex: 1, padding: '13px', borderRadius: '10px', border: `1.5px solid ${colors.border}`, backgroundColor: 'transparent', color: colors.black, fontWeight: '700', cursor: 'pointer', minWidth: '100px' }}
               >
                 Fermer
               </button>

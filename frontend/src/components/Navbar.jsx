@@ -92,7 +92,9 @@ const Navbar = () => {
   };
 
   const getDashboardPath = () => {
-    return (user?.role === 'prestataire' || user?.role === 'admin') ? '/dashboard-pro' : '/dashboard-client';
+    if (user?.role === 'admin') return '/dashboard-admin';
+    if (user?.role === 'prestataire') return '/dashboard-pro';
+    return '/dashboard-client';
   };
 
   return (
@@ -148,16 +150,16 @@ const Navbar = () => {
             <Link to="/coiffeuses" style={navLinkStyle}>Coiffeuses</Link>
             <Link to="/manucure" style={navLinkStyle}>Manucure</Link>
             
-            <div 
-              onMouseEnter={() => setDropdownOpen(true)}
+            <div
+              onMouseEnter={() => setDropdownOpen('services')}
               onMouseLeave={() => setDropdownOpen(false)}
               style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}
             >
               <div style={navLinkStyle}>
                 Services <span style={{ fontSize: '0.7rem', marginLeft: '5px' }}>▼</span>
               </div>
-              
-              {dropdownOpen && (
+
+              {dropdownOpen === 'services' && (
                 <div style={{
                   position: 'absolute', top: '70%', left: 0,
                   backgroundColor: colors.white, borderRadius: '8px',
@@ -174,13 +176,50 @@ const Navbar = () => {
               Devenir Prestataire
             </Link>
 
-            <Link to={user ? getDashboardPath() : "/login"} style={{ 
-              display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none',
-              backgroundColor: colors.terracotta, padding: '10px 20px', borderRadius: '8px',
-              color: colors.white, fontWeight: '700', fontSize: '0.9rem'
-            }}>
-              {user ? `Mon Espace (${user.name})` : 'Se connecter'}
-            </Link>
+            {user?.role === 'prestataire' ? (
+              <div
+                onMouseEnter={() => setDropdownOpen('pro')}
+                onMouseLeave={() => setDropdownOpen(false)}
+                style={{ position: 'relative', height: '100%', display: 'flex', alignItems: 'center' }}
+              >
+                <div style={{
+                  display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none',
+                  backgroundColor: colors.terracotta, padding: '10px 20px', borderRadius: '8px',
+                  color: colors.white, fontWeight: '700', fontSize: '0.9rem', cursor: 'pointer',
+                }}>
+                  {user.name} <span style={{ fontSize: '0.7rem' }}>▼</span>
+                </div>
+                {dropdownOpen === 'pro' && (
+                  <div style={{
+                    position: 'absolute', top: '70%', right: 0,
+                    backgroundColor: colors.white, borderRadius: '12px',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.12)', minWidth: '200px',
+                    overflow: 'hidden', padding: '8px 0', zIndex: 1001,
+                  }}>
+                    {[
+                      { label: 'Tableau de bord', path: '/dashboard-pro' },
+                      { label: 'Mes prestations', path: '/manage-services' },
+                      { label: 'Mon équipe', path: '/manage-employees' },
+                      { label: 'Mon planning', path: '/planning' },
+                    ].map(item => (
+                      <Link key={item.path} to={item.path} style={{ ...dropdownItemStyle }}
+                        onMouseEnter={e => e.currentTarget.style.backgroundColor = '#f5f5f5'}
+                        onMouseLeave={e => e.currentTarget.style.backgroundColor = 'transparent'}>
+                        {item.label}
+                      </Link>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link to={user ? getDashboardPath() : "/login"} style={{
+                display: 'flex', alignItems: 'center', gap: '10px', textDecoration: 'none',
+                backgroundColor: colors.terracotta, padding: '10px 20px', borderRadius: '8px',
+                color: colors.white, fontWeight: '700', fontSize: '0.9rem',
+              }}>
+                {user ? `Mon Espace (${user.name})` : 'Se connecter'}
+              </Link>
+            )}
           </>
         ) : (
           <Link to={user ? getDashboardPath() : "/login"}
@@ -211,9 +250,26 @@ const Navbar = () => {
           <hr style={{ width: '100%', border: 'none', borderTop: '1px solid #eee', margin: '10px 0' }} />
           
           <Link to="/devenir-partenaire" onClick={() => setMenuOpen(false)} style={{ ...navLinkStyle, color: colors.terracotta, fontWeight: '700', fontSize: '1.1rem' }}>Devenir Prestataire</Link>
-          <Link to={user ? getDashboardPath() : "/login"} onClick={() => setMenuOpen(false)} style={{ ...navLinkStyle, color: colors.black, fontWeight: '600', fontSize: '1.1rem' }}>
-            {user ? "Mon Tableau de bord" : "Se connecter"}
-          </Link>
+
+          {user?.role === 'prestataire' ? (
+            <>
+              {[
+                { label: 'Tableau de bord', path: '/dashboard-pro' },
+                { label: 'Mes prestations', path: '/manage-services' },
+                { label: 'Mon équipe', path: '/manage-employees' },
+                { label: 'Mon planning', path: '/planning' },
+              ].map(item => (
+                <Link key={item.path} to={item.path} onClick={() => setMenuOpen(false)}
+                  style={{ ...navLinkStyle, color: colors.black, fontWeight: '600', fontSize: '1.05rem' }}>
+                  {item.label}
+                </Link>
+              ))}
+            </>
+          ) : (
+            <Link to={user ? getDashboardPath() : "/login"} onClick={() => setMenuOpen(false)} style={{ ...navLinkStyle, color: colors.black, fontWeight: '600', fontSize: '1.1rem' }}>
+              {user ? 'Mon Tableau de bord' : 'Se connecter'}
+            </Link>
+          )}
         </div>
       )}
     </nav>

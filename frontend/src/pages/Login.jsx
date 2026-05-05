@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link, useLocation } from 'react-router-dom';
+import api from '../api';
 
 const Login = () => {
   const navigate = useNavigate();
@@ -26,14 +27,7 @@ const Login = () => {
     setErrorMsg('');
     setIsLoading(true);
     try {
-      const response = await fetch('https://nappybooking.onrender.com/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email, mdp: password }),
-      });
-      const data = await response.json();
-      if (!response.ok) { setErrorMsg(data.message || 'Erreur de connexion'); return; }
-      console.log('Réponse backend:', data); // DEBUG - à supprimer après
+      const { data } = await api.post('/auth/login', { email, mdp: password });
       localStorage.setItem('token', data.token);
       localStorage.setItem('isAuthenticated', 'true');
       localStorage.setItem('userRole', data.role);
@@ -41,10 +35,11 @@ const Login = () => {
       localStorage.setItem('userName', data.prenom || data.nom || '');
       const redirect = localStorage.getItem('redirectAfterLogin');
       if (redirect) { localStorage.removeItem('redirectAfterLogin'); navigate(redirect); return; }
-      if (data.role === 'prestataire' || data.role === 'admin') { navigate('/dashboard-pro'); }
+      if (data.role === 'admin') { navigate('/dashboard-admin'); }
+      else if (data.role === 'prestataire') { navigate('/dashboard-pro'); }
       else { navigate('/dashboard-client'); }
-    } catch {
-      setErrorMsg('Impossible de contacter le serveur.');
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || 'Impossible de contacter le serveur.');
     } finally {
       setIsLoading(false);
     }

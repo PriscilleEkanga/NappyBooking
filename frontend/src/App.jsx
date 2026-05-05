@@ -21,6 +21,7 @@ const ManageEmployees   = lazy(() => import('./pages/ManageEmployees'));
 const BookingForm       = lazy(() => import('./pages/BookingForm'));
 const MesRdv            = lazy(() => import('./pages/MesRdv'));
 const Planning          = lazy(() => import('./pages/Planning'));
+const DashboardAdmin    = lazy(() => import('./pages/DashboardAdmin'));
 
 // Spinner affiché pendant le chargement d'une page
 const PageLoader = () => (
@@ -56,6 +57,7 @@ function App() {
           <Route path="/manage-services"    element={<ManageServices />} />
           <Route path="/manage-employees"   element={<ManageEmployees />} />
           <Route path="/planning"           element={<Planning />} />
+          <Route path="/dashboard-admin"   element={<DashboardAdmin />} />
         </Routes>
       </Suspense>
     </>

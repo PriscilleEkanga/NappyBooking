@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import api from '../api';
 
 const Register = () => {
   const navigate = useNavigate();
@@ -69,33 +70,28 @@ const Register = () => {
     setIsLoading(true);
 
     try {
-      const response = await fetch('https://nappybooking.onrender.com/api/auth/register', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          nom_client: formData.nom_client,
-          prenom_client: formData.prenom_client,
-          email: formData.email,
-          mdp: formData.mdp,
-          role: activeTab === 'pro' ? 'prestataire' : 'client',
-        }),
+      const { data } = await api.post('/auth/register', {
+        nom_client: formData.nom_client,
+        prenom_client: formData.prenom_client,
+        email: formData.email,
+        mdp: formData.mdp,
+        role: activeTab === 'pro' ? 'prestataire' : 'client',
       });
 
-      const data = await response.json();
+      localStorage.setItem('token', data.token);
+      localStorage.setItem('isAuthenticated', 'true');
+      localStorage.setItem('userRole', data.role);
+      localStorage.setItem('userEmail', data.email);
+      localStorage.setItem('userName', data.prenom || data.nom || '');
 
-      if (!response.ok) {
-        // Affiche le message d'erreur du backend (ex: "L'utilisateur existe déjà")
-        setErrorMsg(data.message || "Erreur lors de l'inscription.");
-        return;
+      if (data.role === 'prestataire') {
+        navigate('/dashboard-pro');
+      } else {
+        navigate('/dashboard-client');
       }
 
-      // ✅ Compte créé — on redirige vers la page de connexion
-      navigate('/login', {
-        state: { successMsg: `Compte créé avec succès ! Connectez-vous, ${formData.prenom_client} 🎉` }
-      });
-
-    } catch {
-      setErrorMsg('Impossible de contacter le serveur. Vérifie que ton backend tourne sur le port 5000.');
+    } catch (err) {
+      setErrorMsg(err.response?.data?.message || "Erreur lors de l'inscription.");
     } finally {
       setIsLoading(false);
     }

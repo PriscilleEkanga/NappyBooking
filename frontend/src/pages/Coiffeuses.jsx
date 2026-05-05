@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
+import api from "../api";
 
 // Importation des images des villes et salons
 import imgMistral from "../assets/mistral.jpg";
@@ -24,6 +25,8 @@ const Coiffeuses = () => {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768);
   const [searchCity, setSearchCity] = useState("");
   const [isVisible, setIsVisible] = useState(false);
+  const [salons, setSalons] = useState([]);
+  const [loadingSalons, setLoadingSalons] = useState(false);
   const hypeSectionRef = useRef(null);
 
   useEffect(() => {
@@ -87,29 +90,21 @@ const Coiffeuses = () => {
     { id: 4, name: "Passes Mèches Américaines", img: imgPasseMeche, count: "95+ salons" },
   ];
 
-  const salonsData = [
-    { id: 1, name: "MistralCare", rating: 4.9, address: "15 rue Gauthey, 75017 Paris", city: "paris", price: "45€", tags: ["Tissage", "Soins"], img: imgMistral, images: [imgMistral, imgBraids, imgLace] },
-    { id: 2, name: "Ded Glow Beauty", rating: 4.8, address: "54 rue Veron, 94140 Alfortville", city: "paris", price: "35€", tags: ["Nattes", "Beauté"], img: imgDedGlow, images: [imgDedGlow, imgPasseMeche, imgBraids] },
-    { id: 3, name: "audeBraids", rating: 5.0, address: "Corbeil Essonnes, Paris Sud", city: "paris", price: "60€", tags: ["Braids", "Crochet"], img: imgAude, images: [imgAude, imgLace, imgLoxe] },
-    { id: 4, name: "Lyon Nappy Zen", rating: 4.7, address: "22 Rue de la République, Lyon", city: "lyon", price: "50€", tags: ["Locks", "Démêlage"], img: imgLyon, images: [imgLyon, imgLoxe, imgBraids] },
-    { id: 5, name: "Lumière Afro", rating: 4.9, address: "5 Petite Rue des Feuillants, Lyon", city: "lyon", price: "40€", tags: ["Enfants", "Soins"], img: imgLyon, images: [imgLyon, imgPasseMeche, imgLace] },
-    { id: 6, name: "Massilia Afro Style", rating: 4.6, address: "10 Rue d'Aubagne, Marseille", city: "marseille", price: "30€", tags: ["Nattes", "Vanilles"], img: imgMarseille, images: [imgMarseille, imgBraids, imgPasseMeche] },
-    { id: 7, name: "Phocéenne Boucles", rating: 4.8, address: "45 Avenue du Prado, Marseille", city: "marseille", price: "55€", tags: ["Wash & Go", "Coupe"], img: imgMarseille, images: [imgMarseille, imgLace, imgBraids] },
-    { id: 8, name: "Bordeaux Afro Glow", rating: 4.9, address: "12 Cours de l'Intendance, Bordeaux", city: "bordeaux", price: "45€", tags: ["Box Braids", "Curly Cut"], img: imgBordeaux, images: [imgBordeaux, imgBraids, imgLoxe] },
-    { id: 9, name: "L'Atelier Nappy", rating: 4.7, address: "88 Rue Sainte-Catherine, Bordeaux", city: "bordeaux", price: "38€", tags: ["Twists", "Soins"], img: imgBordeaux, images: [imgBordeaux, imgPasseMeche, imgLace] },
-    { id: 10, name: "Nantes Nappy Queen", rating: 4.8, address: "14 Rue de Verdun, Nantes", city: "nantes", price: "42€", tags: ["Coaching", "Tresses"], img: imgNantes, images: [imgNantes, imgBraids, imgLace] },
-    { id: 11, name: "Naoned Braids", rating: 4.5, address: "3 Rue de la Fosse, Nantes", city: "nantes", price: "50€", tags: ["Faux Locs", "Crochet"], img: imgNantes, images: [imgNantes, imgLoxe, imgPasseMeche] },
-    { id: 12, name: "Lille Elégance Afro", rating: 4.9, address: "21 Rue Faidherbe, Lille", city: "lille", price: "48€", tags: ["Soins Protéinés", "Mariage"], img: imgLille, images: [imgLille, imgBraids, imgLace] },
-    { id: 13, name: "Ch'ti Nappy Corner", rating: 4.7, address: "5 Rue de la Monnaie, Lille", city: "lille", price: "35€", tags: ["Enfants", "Tresses"], img: imgLille, images: [imgLille, imgPasseMeche, imgBraids] },
-  ];
 
-  const filteredSalons = city
-    ? salonsData.filter((s) => s.city.toLowerCase() === city.toLowerCase())
-    : [];
+  useEffect(() => {
+    if (!city) return;
+    setLoadingSalons(true);
+    api.get(`/prestataires?city=${city.toLowerCase()}&categorie=coiffure`)
+      .then(({ data }) => setSalons(data))
+      .catch(() => setSalons([]))
+      .finally(() => setLoadingSalons(false));
+  }, [city]);
 
   const handleSearch = () => {
     if (searchCity.trim()) navigate(`/coiffeuses/${searchCity.toLowerCase().trim()}`);
   };
+
+  const buildSalonUrl = (salon) => `/salon/${salon._id}`;
 
   // --- VUE 1 : RÉSULTATS PAR VILLE ---
   if (city) {
@@ -122,44 +117,49 @@ const Coiffeuses = () => {
           <h1 style={{ fontSize: "1.8rem", fontWeight: "900", margin: "20px 0 10px" }}>
             Coiffeuses Afro à {city.charAt(0).toUpperCase() + city.slice(1)}
           </h1>
-          <p style={{ color: colors.gray, marginBottom: "30px" }}>{filteredSalons.length} établissements trouvés</p>
+          <p style={{ color: colors.gray, marginBottom: "30px" }}>
+            {loadingSalons ? "Recherche en cours..." : `${salons.length} établissement${salons.length > 1 ? 's' : ''} trouvé${salons.length > 1 ? 's' : ''}`}
+          </p>
           <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-            {filteredSalons.map((salon) => (
-              <div key={salon.id} style={{ display: "flex", border: "1px solid #EEE", borderRadius: "16px", overflow: "hidden" }}>
-                <div 
-                  onClick={() => navigate(`/salon/${salon.id}?category=coiffure&name=${encodeURIComponent(salon.name)}&address=${encodeURIComponent(salon.address)}&rating=${salon.rating}&price=${encodeURIComponent(salon.price)}&tags=${encodeURIComponent(JSON.stringify(salon.tags))}&img=${encodeURIComponent(salon.img)}&images=${encodeURIComponent(JSON.stringify(salon.images || [salon.img]))}`)}
-                  style={{ cursor: 'pointer', flexShrink: 0 }}
+            {loadingSalons ? (
+              <p style={{ color: colors.gray, textAlign: "center", padding: "40px 0" }}>Chargement...</p>
+            ) : salons.length === 0 ? (
+              <p style={{ color: colors.gray, textAlign: "center", padding: "40px 0" }}>Aucun établissement trouvé dans cette ville.</p>
+            ) : salons.map((salon) => (
+              <div key={salon._id} style={{ display: "flex", border: "1px solid #EEE", borderRadius: "16px", overflow: "hidden" }}>
+                <div
+                  onClick={() => navigate(buildSalonUrl(salon))}
+                  style={{ cursor: 'pointer', flexShrink: 0, width: "180px", height: "180px", backgroundColor: "#E8D5CC", display: "flex", alignItems: "center", justifyContent: "center" }}
                 >
-                  <img src={salon.img} alt={salon.name} style={{ width: "180px", height: "180px", objectFit: "cover", display: "block" }} />
+                  <span style={{ fontSize: "3rem" }}>💇🏾‍♀️</span>
                 </div>
                 <div style={{ padding: "20px", flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
                   <div>
                     <div style={{ display: "flex", justifyContent: "space-between" }}>
-                      <h3 
-                        onClick={() => navigate(`/salon/${salon.id}?category=coiffure&name=${encodeURIComponent(salon.name)}&address=${encodeURIComponent(salon.address)}&rating=${salon.rating}&price=${encodeURIComponent(salon.price)}&tags=${encodeURIComponent(JSON.stringify(salon.tags))}&img=${encodeURIComponent(salon.img)}&images=${encodeURIComponent(JSON.stringify(salon.images || [salon.img]))}`)}
-                        style={{ margin: 0, fontSize: "1.3rem", fontWeight: "800", cursor: "pointer", textDecoration: "none" }}
+                      <h3
+                        onClick={() => navigate(buildSalonUrl(salon))}
+                        style={{ margin: 0, fontSize: "1.3rem", fontWeight: "800", cursor: "pointer" }}
                         onMouseEnter={(e) => e.target.style.color = colors.terracotta}
                         onMouseLeave={(e) => e.target.style.color = colors.black}
                       >
-                        {salon.name}
+                        {salon.nom_salon}
                       </h3>
-                      <div style={{ fontWeight: "700", color: colors.terracotta }}>★ {salon.rating}</div>
+                      <div style={{ fontWeight: "700", color: colors.terracotta }}>★ {salon.note}</div>
                     </div>
-                    <p style={{ color: colors.gray, fontSize: "0.9rem", margin: "5px 0" }}>{salon.address}</p>
-                    <div style={{ display: "flex", gap: "8px", marginTop: "10px" }}>
-                      {salon.tags.map((tag) => (
+                    <p style={{ color: colors.gray, fontSize: "0.9rem", margin: "5px 0" }}>{salon.adresse}</p>
+                    <div style={{ display: "flex", gap: "8px", marginTop: "10px", flexWrap: "wrap" }}>
+                      {(salon.tags || []).map((tag) => (
                         <span key={tag} style={{ backgroundColor: colors.lightGray, padding: "4px 10px", borderRadius: "20px", fontSize: "0.75rem", fontWeight: "600" }}>{tag}</span>
                       ))}
                     </div>
                   </div>
                   <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <span style={{ fontWeight: "800", fontSize: "1.1rem" }}>Dès {salon.price}</span>
-                    {/* APPEL DE LA FONCTION AVEC ID DU SALON */}
-                    <button 
-                        onClick={() => handleBookingClick(salon.id, salon.name, salon.address)} 
-                        style={{ backgroundColor: colors.terracotta, color: "white", border: "none", padding: "10px 20px", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}
+                    <span style={{ fontWeight: "800", fontSize: "1.1rem" }}>Dès {salon.tarif_moyen}€</span>
+                    <button
+                      onClick={() => handleBookingClick(salon._id, salon.nom_salon, salon.adresse)}
+                      style={{ backgroundColor: colors.terracotta, color: "white", border: "none", padding: "10px 20px", borderRadius: "8px", fontWeight: "700", cursor: "pointer" }}
                     >
-                        Prendre RDV
+                      Prendre RDV
                     </button>
                   </div>
                 </div>
